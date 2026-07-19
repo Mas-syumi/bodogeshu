@@ -441,12 +441,24 @@ const STORE=(()=>{ try{
 const storageMode=()=> fdb ? "Firebase（全端末で共有）"
   : (STORE ? "アプリ内ストレージ" : "この端末のみ");
 
+/* 読み込み。失敗は null を返す（空履歴と区別する） */
+
+/* 履歴レコードの値を表示用に安全化（外部データをHTMLとして解釈させない） */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
+
 async function loadHistory(){
   try{
-    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
-    if(STORE){ const r=await STORE.get(HKEY, false); return r?JSON.parse(r.value):[]; }
+    if(fdb){
+      const s=await fdb.ref(FPATH).once("value");
+      const v=s.val();
+      if(v==null) return [];
+      const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x && typeof x==="object");
+    }
+    if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
-  }catch(e){ return []; }
+  }catch(e){ return null; }
 }
 async function writeHistory(h){
   try{
@@ -455,11 +467,17 @@ async function writeHistory(h){
     localStorage.setItem(HKEY, JSON.stringify(h));
   }catch(e){ console.error("history save failed",e); }
 }
+/* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
-  const h=await loadHistory();
-  h.push(rec);
-  if(h.length>100) h.splice(0,h.length-100);
-  await writeHistory(h);
+  try{
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory();
+    if(h===null) return;
+    h.push(rec);
+    if(h.length>100) h.splice(0,h.length-100);
+    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
+    localStorage.setItem(HKEY, JSON.stringify(h));
+  }catch(e){}
 }
 async function clearHistory(){
   try{
@@ -907,20 +925,34 @@ document.getElementById("histBtn").onclick=async()=>{
   if(overlay.classList.contains("show")) return;   // ラウンド結果表示中は開かない
   const h=await loadHistory();
   ptitle.textContent="対戦履歴";
+  if(h===null){
+    plines.innerHTML=`履歴を読み込めませんでした。<br>通信状況を確認してもう一度お試しください。`;
+    setChoices([["閉じる",()=>overlay.classList.remove("show")]]);
+    overlay.classList.add("show");
+    return;
+  }
   if(!h.length){
     plines.innerHTML=`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`;
   }else{
     const wins=h.filter(r=>r.win).length;
     const rows=[...h].reverse().slice(0,15).map(r=>{
       const dt=new Date(r.t);
-      return `${dt.getMonth()+1}/${dt.getDate()}　${r.n||4}人・${DIFF_LABEL[r.diff]||"—"}　${r.win?"🏆勝ち":r.rank+"位"}（🐮${r.pt}）`;
+      return `${dt.getMonth()+1}/${dt.getDate()}　${num(r.n,4)}人・${esc(DIFF_LABEL[r.diff]||"—")}　${r.win?"🏆勝ち":num(r.rank)+"位"}（🐮${num(r.pt)}）`;
     }).join("<br>");
     plines.innerHTML=`<b>通算 ${h.length}戦 ${wins}勝</b><br>
       <span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}<br><br>
       <a href="#" id="clearHist" style="color:var(--h3)">履歴を全消去</a>`;
     document.getElementById("clearHist").onclick=async e=>{
-      e.preventDefault(); await clearHistory();
-      overlay.classList.remove("show"); msg("対戦履歴を消去しました");
+      e.preventDefault();
+      const shared = !!fdb;
+      ptitle.textContent="履歴を全消去しますか？";
+      plines.innerHTML = shared
+        ? `<b>この操作は全端末で共有されている履歴を削除します。</b><br>他の端末で記録した対戦もすべて消えます。`
+        : `この端末に保存された対戦履歴をすべて削除します。`;
+      setChoices([
+        ["削除する", async()=>{ await clearHistory(); overlay.classList.remove("show"); msg("対戦履歴を消去しました"); }],
+        ["やめる", ()=>overlay.classList.remove("show")],
+      ]);
     };
   }
   pbtn.textContent="閉じる";
@@ -1600,12 +1632,24 @@ const STORE=(()=>{ try{
 const storageMode=()=> fdb ? "Firebase（全端末で共有）"
   : (STORE ? "アプリ内ストレージ" : "この端末のみ");
 
+/* 読み込み。失敗は null を返す（空履歴と区別する） */
+
+/* 履歴レコードの値を表示用に安全化（外部データをHTMLとして解釈させない） */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
+
 async function loadHistory(){
   try{
-    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
-    if(STORE){ const r=await STORE.get(HKEY, false); return r?JSON.parse(r.value):[]; }
+    if(fdb){
+      const s=await fdb.ref(FPATH).once("value");
+      const v=s.val();
+      if(v==null) return [];
+      const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x && typeof x==="object");
+    }
+    if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
-  }catch(e){ return []; }
+  }catch(e){ return null; }
 }
 async function writeHistory(h){
   try{
@@ -1614,11 +1658,17 @@ async function writeHistory(h){
     localStorage.setItem(HKEY, JSON.stringify(h));
   }catch(e){ console.error("history save failed",e); }
 }
+/* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
-  const h=await loadHistory();
-  h.push(rec);
-  if(h.length>100) h.splice(0,h.length-100);   // 直近100件まで
-  await writeHistory(h);
+  try{
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory();
+    if(h===null) return;
+    h.push(rec);
+    if(h.length>100) h.splice(0,h.length-100);
+    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
+    localStorage.setItem(HKEY, JSON.stringify(h));
+  }catch(e){}
 }
 async function clearHistory(){
   try{
@@ -1627,8 +1677,24 @@ async function clearHistory(){
     else localStorage.removeItem(HKEY);
   }catch(e){}
 }
+/* 全消去の確認（Firebase有効時は共有データである旨を明示） */
+function confirmClear(){
+  const shared = !!fdb;
+  showSheet({title:"履歴を全消去しますか？",
+    body: shared
+      ? `<b>この操作は全端末で共有されている履歴を削除します。</b><br>他の端末で記録した対戦もすべて消えます。`
+      : `この端末に保存された対戦履歴をすべて削除します。`,
+    btns:[["削除する", async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); }],
+          ["やめる", null, "g"]]});
+}
+
 async function showHistory(){
   const h=await loadHistory();
+  if(h===null){
+    showSheet({title:"対戦履歴",body:`履歴を読み込めませんでした。<br>通信状況を確認してもう一度お試しください。`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
   if(!h.length){
     showSheet({title:"対戦履歴",body:`まだ対戦記録がありません。1ゲーム遊ぶとここに残ります。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
       btns:[["閉じる",closeSheet,true]]});
@@ -1642,14 +1708,14 @@ async function showHistory(){
   const rows=[...h].reverse().slice(0,15).map(r=>{
     const dt=new Date(r.t);
     const day=`${dt.getMonth()+1}/${dt.getDate()}`;
-    return `${day}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":`${r.rank}位`}（${r.pt}点）`;
+    return `${day}　${num(r.n)}人・${esc(DIFF_LABEL[r.diff]||"?")}　${r.win?"🏆勝ち":`${num(r.rank)}位`}（${r.pt}点）`;
   }).join("<br>");
   showSheet({title:"対戦履歴",
     body:`<b>通算 ${h.length}戦 ${wins}勝</b><br>${byDiff}<br>
       <span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
     btns:[
       ["閉じる",closeSheet,true],
-      ["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },true],
+      ["履歴を全消去",()=>confirmClear(),true],
     ]});
 }
 $("histBtn").onclick=showHistory;
@@ -1911,12 +1977,24 @@ const STORE=(()=>{ try{
 }catch(e){} return null; })();
 const storageMode=()=> fdb ? "Firebase（全端末で共有）"
   : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+/* 読み込み。失敗は null を返す（空履歴と区別する） */
+
+/* 履歴レコードの値を表示用に安全化（外部データをHTMLとして解釈させない） */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
+
 async function loadHistory(){
   try{
-    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
-    if(STORE){ const r=await STORE.get(HKEY, false); return r?JSON.parse(r.value):[]; }
+    if(fdb){
+      const s=await fdb.ref(FPATH).once("value");
+      const v=s.val();
+      if(v==null) return [];
+      const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x && typeof x==="object");
+    }
+    if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
-  }catch(e){ return []; }
+  }catch(e){ return null; }
 }
 async function writeHistory(h){
   try{
@@ -1925,10 +2003,17 @@ async function writeHistory(h){
     localStorage.setItem(HKEY, JSON.stringify(h));
   }catch(e){ console.error("history save failed",e); }
 }
+/* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
-  const h=await loadHistory(); h.push(rec);
-  if(h.length>100) h.splice(0,h.length-100);
-  await writeHistory(h);
+  try{
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory();
+    if(h===null) return;
+    h.push(rec);
+    if(h.length>100) h.splice(0,h.length-100);
+    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
+    localStorage.setItem(HKEY, JSON.stringify(h));
+  }catch(e){}
 }
 async function clearHistory(){
   try{
@@ -1937,6 +2022,17 @@ async function clearHistory(){
     else localStorage.removeItem(HKEY);
   }catch(e){}
 }
+/* 全消去の確認（Firebase有効時は共有データである旨を明示） */
+function confirmClear(){
+  const shared = !!fdb;
+  showSheet({title:"履歴を全消去しますか？",
+    body: shared
+      ? `<b>この操作は全端末で共有されている履歴を削除します。</b><br>他の端末で記録した対戦もすべて消えます。`
+      : `この端末に保存された対戦履歴をすべて削除します。`,
+    btns:[["削除する", async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); }],
+          ["やめる", null, "g"]]});
+}
+
 
 /* ================= cards ================= */
 const CARDS={
@@ -2435,6 +2531,11 @@ $("compBtn").onclick=()=>{
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
+  if(h===null){
+    showSheet({title:"対戦履歴",body:`履歴を読み込めませんでした。<br>通信状況を確認してもう一度お試しください。`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
   if(!h.length){
     showSheet({title:"対戦履歴",center:true,
       body:`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
@@ -2444,13 +2545,13 @@ $("histBtn").onclick=async()=>{
   const wins=h.filter(r=>r.win).length;
   const rows=[...h].reverse().slice(0,15).map(r=>{
     const dt=new Date(r.t);
-    return `${dt.getMonth()+1}/${dt.getDate()}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":r.rank+"位"}`;
+    return `${dt.getMonth()+1}/${dt.getDate()}　${num(r.n)}人・${esc(DIFF_LABEL[r.diff]||"?")}　${r.win?"🏆勝ち":num(r.rank)+"位"}`;
   }).join("<br>");
   showSheet({title:"対戦履歴",
     body:`<b>通算 ${h.length}戦 ${wins}勝</b><br><span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
     btns:[
       ["閉じる",closeSheet,true],
-      ["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },true],
+      ["履歴を全消去",()=>confirmClear(),true],
     ]});
 };
 
@@ -2679,12 +2780,24 @@ const STORE=(()=>{ try{
 }catch(e){} return null; })();
 const storageMode=()=> fdb ? "Firebase（全端末で共有）"
   : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+/* 読み込み。失敗は null を返す（空履歴と区別する） */
+
+/* 履歴レコードの値を表示用に安全化（外部データをHTMLとして解釈させない） */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
+
 async function loadHistory(){
   try{
-    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
-    if(STORE){ const r=await STORE.get(HKEY, false); return r?JSON.parse(r.value):[]; }
+    if(fdb){
+      const s=await fdb.ref(FPATH).once("value");
+      const v=s.val();
+      if(v==null) return [];
+      const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x && typeof x==="object");
+    }
+    if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
-  }catch(e){ return []; }
+  }catch(e){ return null; }
 }
 async function writeHistory(h){
   try{
@@ -2693,10 +2806,17 @@ async function writeHistory(h){
     localStorage.setItem(HKEY, JSON.stringify(h));
   }catch(e){ console.error(e); }
 }
+/* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
-  const h=await loadHistory(); h.push(rec);
-  if(h.length>100) h.splice(0,h.length-100);
-  await writeHistory(h);
+  try{
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory();
+    if(h===null) return;
+    h.push(rec);
+    if(h.length>100) h.splice(0,h.length-100);
+    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
+    localStorage.setItem(HKEY, JSON.stringify(h));
+  }catch(e){}
 }
 async function clearHistory(){
   try{
@@ -2705,6 +2825,17 @@ async function clearHistory(){
     else localStorage.removeItem(HKEY);
   }catch(e){}
 }
+/* 全消去の確認（Firebase有効時は共有データである旨を明示） */
+function confirmClear(){
+  const shared = !!fdb;
+  showSheet({title:"履歴を全消去しますか？",
+    body: shared
+      ? `<b>この操作は全端末で共有されている履歴を削除します。</b><br>他の端末で記録した対戦もすべて消えます。`
+      : `この端末に保存された対戦履歴をすべて削除します。`,
+    btns:[["削除する", async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); }],
+          ["やめる", null, "g"]]});
+}
+
 
 /* ================= cards ================= */
 const T={
@@ -3314,6 +3445,11 @@ function finish(how, culpritIdx, catcherIdx){
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
+  if(h===null){
+    showSheet({title:"対戦履歴",body:`履歴を読み込めませんでした。<br>通信状況を確認してもう一度お試しください。`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
   if(!h.length){
     showSheet({title:"対戦履歴",body:`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
       btns:[["閉じる",closeSheet,"ghost"]]});
@@ -3323,13 +3459,13 @@ $("histBtn").onclick=async()=>{
   const HOWN={escape:"逃げ切り",tantei:"探偵",inu:"いぬ"};
   const rows=[...h].reverse().slice(0,15).map(r=>{
     const dt=new Date(r.t);
-    return `${dt.getMonth()+1}/${dt.getDate()}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":"負け"}（${HOWN[r.how]||"?"}決着）`;
+    return `${dt.getMonth()+1}/${dt.getDate()}　${num(r.n)}人・${esc(DIFF_LABEL[r.diff]||"?")}　${r.win?"🏆勝ち":"負け"}（${HOWN[r.how]||"?"}決着）`;
   }).join("<br>");
   showSheet({title:"対戦履歴",
     body:`<b>通算 ${h.length}戦 ${wins}勝</b><br><span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
     btns:[
       ["閉じる",closeSheet,"ghost"],
-      ["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },"ghost"],
+      ["履歴を全消去",()=>confirmClear(),"ghost"],
     ]});
 };
 
@@ -3573,18 +3709,34 @@ const STORE=(()=>{ try{
   if(window.parent && window.parent!==window && window.parent.storage) return window.parent.storage;
 }catch(e){} return null; })();
 const storageMode=()=> fdb ? "Firebase（全端末で共有）" : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+/* 読み込み。失敗は null を返す（空履歴と区別する） */
+
+/* 履歴レコードの値を表示用に安全化（外部データをHTMLとして解釈させない） */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
+
 async function loadHistory(){
   try{
-    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
+    if(fdb){
+      const s=await fdb.ref(FPATH).once("value");
+      const v=s.val();
+      if(v==null) return [];
+      // push形式（キー付きオブジェクト）と旧配列形式の両方を読む
+      const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x && typeof x==="object");
+    }
     if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
-  }catch(e){ return []; }
+  }catch(e){ return null; }          // 通信失敗など：空履歴として扱わない
 }
+/* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
   try{
-    const h=await loadHistory(); h.push(rec);
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory();
+    if(h===null) return;                       // 読めなかったときは上書きしない
+    h.push(rec);
     if(h.length>100) h.splice(0,h.length-100);
-    if(fdb){ await fdb.ref(FPATH).set(h); return; }
     if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
     localStorage.setItem(HKEY, JSON.stringify(h));
   }catch(e){}
@@ -3596,6 +3748,17 @@ async function clearHistory(){
     else localStorage.removeItem(HKEY);
   }catch(e){}
 }
+/* 全消去の確認（Firebase有効時は共有データである旨を明示） */
+function confirmClear(){
+  const shared = !!fdb;
+  showSheet({title:"履歴を全消去しますか？",
+    body: shared
+      ? `<b>この操作は全端末で共有されている履歴を削除します。</b><br>他の端末で記録した対戦もすべて消えます。`
+      : `この端末に保存された対戦履歴をすべて削除します。`,
+    btns:[["削除する", async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); }],
+          ["やめる", null, "g"]]});
+}
+
 
 /* ================= カード ================= */
 /* 36枚：1〜5各4枚 / 0・10が3枚 / -5・15が2枚 / -10・20が1枚 / 特殊4種1枚ずつ */
@@ -3937,6 +4100,11 @@ $("compBtn").onclick=()=>{
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
+  if(h===null){
+    showSheet({title:"対戦履歴",body:`履歴を読み込めませんでした。<br>通信状況を確認してもう一度お試しください。`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
   if(!h.length){
     showSheet({title:"対戦履歴",body:`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
       btns:[["閉じる",closeSheet,true]]});
@@ -3945,11 +4113,11 @@ $("histBtn").onclick=async()=>{
   const wins=h.filter(r=>r.win).length;
   const rows=[...h].reverse().slice(0,15).map(r=>{
     const dt=new Date(r.t);
-    return `${dt.getMonth()+1}/${dt.getDate()}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":"敗退"}（${r.rounds}R）`;
+    return `${dt.getMonth()+1}/${dt.getDate()}　${num(r.n)}人・${esc(DIFF_LABEL[r.diff]||"?")}　${r.win?"🏆勝ち":"敗退"}（${num(r.rounds)}R）`;
   }).join("<br>");
   showSheet({title:"対戦履歴",
     body:`<b>通算 ${h.length}戦 ${wins}勝</b><br><span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
-    btns:[["閉じる",closeSheet,true],["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },true]]});
+    btns:[["閉じる",closeSheet,true],["履歴を全消去",()=>confirmClear(),true]]});
 };
 
 chooseSetup();
@@ -4194,18 +4362,34 @@ const STORE=(()=>{ try{
   if(window.parent && window.parent!==window && window.parent.storage) return window.parent.storage;
 }catch(e){} return null; })();
 const storageMode=()=> fdb ? "Firebase（全端末で共有）" : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+/* 読み込み。失敗は null を返す（空履歴と区別する） */
+
+/* 履歴レコードの値を表示用に安全化（外部データをHTMLとして解釈させない） */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
+
 async function loadHistory(){
   try{
-    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
+    if(fdb){
+      const s=await fdb.ref(FPATH).once("value");
+      const v=s.val();
+      if(v==null) return [];
+      // push形式（キー付きオブジェクト）と旧配列形式の両方を読む
+      const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x && typeof x==="object");
+    }
     if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
-  }catch(e){ return []; }
+  }catch(e){ return null; }          // 通信失敗など：空履歴として扱わない
 }
+/* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
   try{
-    const h=await loadHistory(); h.push(rec);
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory();
+    if(h===null) return;                       // 読めなかったときは上書きしない
+    h.push(rec);
     if(h.length>100) h.splice(0,h.length-100);
-    if(fdb){ await fdb.ref(FPATH).set(h); return; }
     if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
     localStorage.setItem(HKEY, JSON.stringify(h));
   }catch(e){}
@@ -4217,6 +4401,17 @@ async function clearHistory(){
     else localStorage.removeItem(HKEY);
   }catch(e){}
 }
+/* 全消去の確認（Firebase有効時は共有データである旨を明示） */
+function confirmClear(){
+  const shared = !!fdb;
+  showSheet({title:"履歴を全消去しますか？",
+    body: shared
+      ? `<b>この操作は全端末で共有されている履歴を削除します。</b><br>他の端末で記録した対戦もすべて消えます。`
+      : `この端末に保存された対戦履歴をすべて削除します。`,
+    btns:[["削除する", async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); }],
+          ["やめる", null, "g"]]});
+}
+
 
 /* ================= カード ================= */
 const KIND=[
@@ -4660,6 +4855,11 @@ $("compBtn").onclick=()=>{
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
+  if(h===null){
+    showSheet({title:"対戦履歴",body:`履歴を読み込めませんでした。<br>通信状況を確認してもう一度お試しください。`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
   if(!h.length){
     showSheet({title:"対戦履歴",body:`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
       btns:[["閉じる",closeSheet,"g"]]});
@@ -4668,11 +4868,11 @@ $("histBtn").onclick=async()=>{
   const wins=h.filter(r=>r.win).length;
   const rows=[...h].reverse().slice(0,15).map(r=>{
     const dt=new Date(r.t);
-    return `${dt.getMonth()+1}/${dt.getDate()}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":"😖 一人負け"}`;
+    return `${dt.getMonth()+1}/${dt.getDate()}　${num(r.n)}人・${esc(DIFF_LABEL[r.diff]||"?")}　${r.win?"🏆勝ち":"😖 一人負け"}`;
   }).join("<br>");
   showSheet({title:"対戦履歴",
     body:`<b>通算 ${h.length}戦 ${wins}勝</b><br><span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
-    btns:[["閉じる",closeSheet,"g"],["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },"g"]]});
+    btns:[["閉じる",closeSheet,"g"],["履歴を全消去",()=>confirmClear(),"g"]]});
 };
 
 chooseSetup();
@@ -4895,18 +5095,34 @@ const STORE=(()=>{ try{
   if(window.parent && window.parent!==window && window.parent.storage) return window.parent.storage;
 }catch(e){} return null; })();
 const storageMode=()=> fdb ? "Firebase（全端末で共有）" : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+/* 読み込み。失敗は null を返す（空履歴と区別する） */
+
+/* 履歴レコードの値を表示用に安全化（外部データをHTMLとして解釈させない） */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
+
 async function loadHistory(){
   try{
-    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
+    if(fdb){
+      const s=await fdb.ref(FPATH).once("value");
+      const v=s.val();
+      if(v==null) return [];
+      // push形式（キー付きオブジェクト）と旧配列形式の両方を読む
+      const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x && typeof x==="object");
+    }
     if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
-  }catch(e){ return []; }
+  }catch(e){ return null; }          // 通信失敗など：空履歴として扱わない
 }
+/* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
   try{
-    const h=await loadHistory(); h.push(rec);
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory();
+    if(h===null) return;                       // 読めなかったときは上書きしない
+    h.push(rec);
     if(h.length>100) h.splice(0,h.length-100);
-    if(fdb){ await fdb.ref(FPATH).set(h); return; }
     if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
     localStorage.setItem(HKEY, JSON.stringify(h));
   }catch(e){}
@@ -4918,6 +5134,17 @@ async function clearHistory(){
     else localStorage.removeItem(HKEY);
   }catch(e){}
 }
+/* 全消去の確認（Firebase有効時は共有データである旨を明示） */
+function confirmClear(){
+  const shared = !!fdb;
+  showSheet({title:"履歴を全消去しますか？",
+    body: shared
+      ? `<b>この操作は全端末で共有されている履歴を削除します。</b><br>他の端末で記録した対戦もすべて消えます。`
+      : `この端末に保存された対戦履歴をすべて削除します。`,
+    btns:[["削除する", async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); }],
+          ["やめる", null, "g"]]});
+}
+
 
 /* ================= カード ================= */
 const BIRD={1:"🐤",2:"🐥",3:"🐦",4:"🕊️",5:"🦜",6:"🦉",7:"🦚"};
@@ -5364,6 +5591,11 @@ function closeSheet(){ $("veil").classList.remove("show"); }
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
+  if(h===null){
+    showSheet({title:"対戦履歴",body:`履歴を読み込めませんでした。<br>通信状況を確認してもう一度お試しください。`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
   if(!h.length){
     showSheet({title:"対戦履歴",body:`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
       btns:[["閉じる",closeSheet,"g"]]});
@@ -5372,11 +5604,11 @@ $("histBtn").onclick=async()=>{
   const wins=h.filter(r=>r.win).length;
   const rows=[...h].reverse().slice(0,15).map(r=>{
     const dt=new Date(r.t);
-    return `${dt.getMonth()+1}/${dt.getDate()}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":"敗退"}`;
+    return `${dt.getMonth()+1}/${dt.getDate()}　${num(r.n)}人・${esc(DIFF_LABEL[r.diff]||"?")}　${r.win?"🏆勝ち":"敗退"}`;
   }).join("<br>");
   showSheet({title:"対戦履歴",
     body:`<b>通算 ${h.length}戦 ${wins}勝</b><br><span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
-    btns:[["閉じる",closeSheet,"g"],["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },"g"]]});
+    btns:[["閉じる",closeSheet,"g"],["履歴を全消去",()=>confirmClear(),"g"]]});
 };
 
 chooseSetup();
@@ -5582,18 +5814,34 @@ const STORE=(()=>{ try{
   if(window.parent && window.parent!==window && window.parent.storage) return window.parent.storage;
 }catch(e){} return null; })();
 const storageMode=()=> fdb ? "Firebase（全端末で共有）" : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+/* 読み込み。失敗は null を返す（空履歴と区別する） */
+
+/* 履歴レコードの値を表示用に安全化（外部データをHTMLとして解釈させない） */
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
+
 async function loadHistory(){
   try{
-    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
+    if(fdb){
+      const s=await fdb.ref(FPATH).once("value");
+      const v=s.val();
+      if(v==null) return [];
+      // push形式（キー付きオブジェクト）と旧配列形式の両方を読む
+      const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x && typeof x==="object");
+    }
     if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
-  }catch(e){ return []; }
+  }catch(e){ return null; }          // 通信失敗など：空履歴として扱わない
 }
+/* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
   try{
-    const h=await loadHistory(); h.push(rec);
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory();
+    if(h===null) return;                       // 読めなかったときは上書きしない
+    h.push(rec);
     if(h.length>100) h.splice(0,h.length-100);
-    if(fdb){ await fdb.ref(FPATH).set(h); return; }
     if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
     localStorage.setItem(HKEY, JSON.stringify(h));
   }catch(e){}
@@ -5605,6 +5853,17 @@ async function clearHistory(){
     else localStorage.removeItem(HKEY);
   }catch(e){}
 }
+/* 全消去の確認（Firebase有効時は共有データである旨を明示） */
+function confirmClear(){
+  const shared = !!fdb;
+  showSheet({title:"履歴を全消去しますか？",
+    body: shared
+      ? `<b>この操作は全端末で共有されている履歴を削除します。</b><br>他の端末で記録した対戦もすべて消えます。`
+      : `この端末に保存された対戦履歴をすべて削除します。`,
+    btns:[["削除する", async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); }],
+          ["やめる", null, "g"]]});
+}
+
 
 /* ================= カード ================= */
 /* 5色 × 各7枚 = 35枚（正規版準拠） */
@@ -5960,6 +6219,11 @@ function closeSheet(){ $("veil").classList.remove("show"); }
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
+  if(h===null){
+    showSheet({title:"対戦履歴",body:`履歴を読み込めませんでした。<br>通信状況を確認してもう一度お試しください。`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
   if(!h.length){
     showSheet({title:"対戦履歴",body:`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
       btns:[["閉じる",closeSheet,"g"]]});
@@ -5968,11 +6232,11 @@ $("histBtn").onclick=async()=>{
   const wins=h.filter(r=>r.win).length;
   const rows=[...h].reverse().slice(0,15).map(r=>{
     const dt=new Date(r.t);
-    return `${dt.getMonth()+1}/${dt.getDate()}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":"敗退"}（シャチ${r.orca}）`;
+    return `${dt.getMonth()+1}/${dt.getDate()}　${num(r.n)}人・${esc(DIFF_LABEL[r.diff]||"?")}　${r.win?"🏆勝ち":"敗退"}（シャチ${num(r.orca)}）`;
   }).join("<br>");
   showSheet({title:"対戦履歴",
     body:`<b>通算 ${h.length}戦 ${wins}勝</b><br><span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
-    btns:[["閉じる",closeSheet,"g"],["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },"g"]]});
+    btns:[["閉じる",closeSheet,"g"],["履歴を全消去",()=>confirmClear(),"g"]]});
 };
 
 chooseSetup();
