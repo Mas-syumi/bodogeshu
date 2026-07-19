@@ -9,8 +9,8 @@
   html,body{height:100%;}
   body{
     font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -10%, #2a2f42, #12141d 70%);
-    color:#f0ecdf; min-height:100%; user-select:none;
+    background:radial-gradient(ellipse at 50% -10%, var(--lbgA), var(--lbgB) 70%);
+    color:var(--ltxt); min-height:100%; user-select:none;
     display:flex; flex-direction:column;
   }
   /* ---------- launcher ---------- */
@@ -19,6 +19,7 @@
     font-size:1.5rem; letter-spacing:.3em; font-weight:800; text-align:center;
   }
   #home .tag{font-size:.68rem; letter-spacing:.2em; opacity:.5; margin-top:6px; text-align:center;}
+  html[data-theme="light"] #home .tag{ opacity:1; color:rgba(20,32,42,.55); }
   #grid{
     display:grid; grid-template-columns:1fr 1fr; gap:12px;
     width:100%; max-width:460px; margin-top:24px;
@@ -44,6 +45,21 @@
   .t-goki{background:linear-gradient(160deg,#4a5a2c,#1b2112);}
   .t-kotori{background:linear-gradient(160deg,#2f5068,#111f2b);}
   .t-pengin{background:linear-gradient(160deg,#2a4a5e,#0f1e28);}
+  /* ライトモード：タイルを淡い色にして濃い文字を載せる */
+  html[data-theme="light"] .t-nimmt{background:linear-gradient(160deg,#c9e6d6,#a5d2ba);}
+  html[data-theme="light"] .t-gems{background:linear-gradient(160deg,#ded2ec,#c3b2da);}
+  html[data-theme="light"] .t-koi{background:linear-gradient(160deg,#f0cdd5,#dfa9b6);}
+  html[data-theme="light"] .t-hannin{background:linear-gradient(160deg,#d2dcee,#b2c0da);}
+  html[data-theme="light"] .t-jackal{background:linear-gradient(160deg,#f0d5bf,#dfb694);}
+  html[data-theme="light"] .t-goki{background:linear-gradient(160deg,#d9e4c4,#bccf9c);}
+  html[data-theme="light"] .t-kotori{background:linear-gradient(160deg,#cfe0ec,#aec8dc);}
+  html[data-theme="light"] .t-pengin{background:linear-gradient(160deg,#cee2ec,#a9cadc);}
+  html[data-theme="light"] .tile{ color:#22303a; border-color:rgba(0,0,0,.10); }
+  html[data-theme="light"] .tile:hover{ border-color:rgba(0,0,0,.35); }
+  html[data-theme="light"] .tile .en{ opacity:1; color:rgba(20,32,42,.55); }
+  html[data-theme="light"] .tile .ds{ opacity:1; color:rgba(20,32,42,.85); }
+  html[data-theme="light"] .tile .pl{ opacity:1; color:rgba(20,32,42,.62); }
+  html[data-theme="light"] .howto{ background:rgba(255,255,255,.75); color:#22303a; border-color:rgba(0,0,0,.25); }
   .howto{
     position:absolute; right:10px; bottom:10px;
     font:inherit; font-size:.6rem; font-weight:800; padding:3px 9px; border-radius:999px;
@@ -87,6 +103,24 @@
   }
   #barname{font-size:.78rem; font-weight:800; letter-spacing:.08em; opacity:.85;}
   #frame{flex:1; width:100%; border:none; background:transparent;}
+
+  /* ===== テーマ ===== */
+  :root{ --lbgA:#2a2f42; --lbgB:#12141d; --ltxt:#f0ecdf;
+         --tile-bd:rgba(255,255,255,.10); --foot-bd:rgba(255,255,255,.28); }
+  html[data-theme="light"]{
+    --lbgA:#eef1f7; --lbgB:#dce1ec; --ltxt:#26313a;
+    --tile-bd:rgba(0,0,0,.12); --foot-bd:rgba(0,0,0,.28);
+  }
+  html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.9); }
+  html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+  html[data-theme="light"] #helpbody{ color:#26313a; }
+  html[data-theme="light"] #helpbody .hgoal{ background:rgba(0,0,0,.06); }
+  html[data-theme="light"] #helpclose{ color:#26313a; border-color:rgba(0,0,0,.3); }
+  html[data-theme="light"] #note button, html[data-theme="light"] #note a{ color:#26313a; border-color:var(--foot-bd); }
+  html[data-theme="light"] #topbar{ background:rgba(255,255,255,.8); border-bottom-color:rgba(0,0,0,.12); }
+  html[data-theme="light"] #back, html[data-theme="light"] #gname{ color:#26313a; }
+  html[data-theme="light"] .howto{ background:rgba(0,0,0,.18); }
+
 </style>
 </head>
 <body>
@@ -95,6 +129,7 @@
     <div class="tag">CPU対戦バンドル</div>
     <div id="grid"></div>
     <div id="note">
+      <button id="themeBtn">🌙 ダーク</button>
       <button id="aboutBtn">このサイトについて</button>
       <a href="https://github.com/Mas-syumi/bodogeshu" target="_blank" rel="noopener">GitHub</a>
     </div>
@@ -160,6 +195,26 @@ function showHelp(id){
   document.getElementById("helpbody").scrollTop=0;
   document.getElementById("helpveil").classList.add("show");
 }
+
+/* ===== テーマ切り替え ===== */
+function currentTheme(){
+  try{ const t=localStorage.getItem("bodoge-theme"); if(t) return t; }catch(e){}
+  return (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+}
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  const b=document.getElementById("themeBtn");
+  if(b) b.textContent = t==="light" ? "☀️ ライト" : "🌙 ダーク";
+  try{ localStorage.setItem("bodoge-theme", t); }catch(e){}
+  // 開いているゲーム（iframe）にも伝える
+  const fr=document.querySelector("#view iframe");
+  if(fr && fr.contentWindow){ try{ fr.contentWindow.postMessage({type:"theme", value:t}, "*"); }catch(e){} }
+}
+applyTheme(currentTheme());
+document.getElementById("themeBtn").onclick=()=>{
+  applyTheme(document.documentElement.getAttribute("data-theme")==="light" ? "dark" : "light");
+};
+
 document.getElementById("aboutBtn").onclick=()=>{
   document.getElementById("helptitle").textContent="このサイトについて";
   document.getElementById("helpbody").innerHTML=ABOUT;
@@ -200,7 +255,14 @@ function open_(id){
   const g=GAMES.find(x=>x.id===id);
   const src=document.getElementById("src-"+id).textContent.replace(/<\\\/script>/g,"<"+"/script>");
   $("barname").textContent=g.ico+" "+g.nm;
-  $("frame").srcdoc=src;
+  const fr=$("frame");
+  fr.name="theme:"+(document.documentElement.getAttribute("data-theme")||"dark");
+  fr.srcdoc=src;
+  // 読み込み後にも念のため通知（srcdoc内の初期化タイミング差を吸収）
+  fr.onload=()=>{
+    const t=document.documentElement.getAttribute("data-theme")||"dark";
+    try{ fr.contentWindow.postMessage({type:"theme", value:t}, "*"); }catch(e){}
+  };
   $("home").classList.add("off");
   $("view").classList.add("on");
 }
@@ -381,6 +443,42 @@ $("back").onclick=()=>{
     #rows{padding:4px 8px;}
     .rowheads{min-width:28px;}
   }
+
+/* ===== テーマ切り替え（ライト/ダーク） ===== */
+:root{ --txt:#f7f1e1; --bgA:#1e4d3b; --bgB:#16382b;
+       --panel-bg:rgba(0,0,0,.26); --panel-bd:rgba(255,255,255,.14);
+       --btn-bd:rgba(255,255,255,.4); --slot-bg:rgba(255,255,255,.05); }
+html[data-theme="light"]{
+  --txt:#26313a; --bgA:#dff0e6; --bgB:#c3e0cf;
+  --panel-bg:rgba(255,255,255,.72); --panel-bd:rgba(0,0,0,.14);
+  --btn-bd:rgba(0,0,0,.32); --slot-bg:rgba(0,0,0,.05);
+}
+html[data-theme="light"] body{ color:var(--txt); }
+/* ライト時：薄い文字色の指定を読みやすい濃色に寄せる */
+html[data-theme="light"] .who,
+html[data-theme="light"] .pl,
+html[data-theme="light"] #field,
+html[data-theme="light"] #pyramid,
+html[data-theme="light"] #table,
+html[data-theme="light"] #board,
+html[data-theme="light"] #myarea,
+html[data-theme="light"] #me{ color:var(--txt); }
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #msg{ color:var(--txt); }
+html[data-theme="light"] #helpBtn,
+html[data-theme="light"] #histBtn,
+html[data-theme="light"] #compBtn{ color:var(--txt); border-color:var(--btn-bd); }
+html[data-theme="light"] #sheet,
+html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #helpbody{ color:#26313a; }
+html[data-theme="light"] #helpclose,
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
+html[data-theme="light"] #veil,
+html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
 </style>
 </head>
 <body>
@@ -450,7 +548,8 @@ const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
 async function loadHistory(){
   try{
     if(fdb){
-      const s=await fdb.ref(FPATH).once("value");
+      // 直近200件のみ取得（pushキーは時系列順なので limitToLast が使える）
+      const s=await fdb.ref(FPATH).limitToLast(200).once("value");
       const v=s.val();
       if(v==null) return [];
       const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
@@ -459,13 +558,6 @@ async function loadHistory(){
     if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
   }catch(e){ return null; }
-}
-async function writeHistory(h){
-  try{
-    if(fdb){ await fdb.ref(FPATH).set(h); return; }
-    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
-    localStorage.setItem(HKEY, JSON.stringify(h));
-  }catch(e){ console.error("history save failed",e); }
 }
 /* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
@@ -1007,6 +1099,22 @@ chooseSetup();
 })();
 <\/script>
 
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
+})();
+<\/script>
+
 </body>
 </html>
 </script>
@@ -1027,7 +1135,7 @@ chooseSetup();
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   body{
     font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 70%);
+    background:radial-gradient(ellipse at 50% -10%, var(--bgA), var(--bgB) 72%);
     color:var(--ink); min-height:100vh; user-select:none;
     display:flex; flex-direction:column; align-items:center;
   }
@@ -1173,6 +1281,42 @@ chooseSetup();
   #sheet .cardpreview{display:flex; justify-content:center; margin-bottom:10px;}
   #sheet .cardpreview .gcard{width:90px; cursor:default;}
   #sheet .discrow{display:flex; gap:8px; justify-content:center; margin:8px 0; flex-wrap:wrap;}
+
+/* ===== テーマ切り替え（ライト/ダーク） ===== */
+:root{ --txt:#efe9f5; --bgA:#241a2e; --bgB:#171021;
+       --panel-bg:rgba(0,0,0,.26); --panel-bd:rgba(255,255,255,.14);
+       --btn-bd:rgba(255,255,255,.4); --slot-bg:rgba(255,255,255,.05); }
+html[data-theme="light"]{
+  --txt:#26313a; --bgA:#efe8f5; --bgB:#ddd2ea;
+  --panel-bg:rgba(255,255,255,.72); --panel-bd:rgba(0,0,0,.14);
+  --btn-bd:rgba(0,0,0,.32); --slot-bg:rgba(0,0,0,.05);
+}
+html[data-theme="light"] body{ color:var(--txt); }
+/* ライト時：薄い文字色の指定を読みやすい濃色に寄せる */
+html[data-theme="light"] .who,
+html[data-theme="light"] .pl,
+html[data-theme="light"] #field,
+html[data-theme="light"] #pyramid,
+html[data-theme="light"] #table,
+html[data-theme="light"] #board,
+html[data-theme="light"] #myarea,
+html[data-theme="light"] #me{ color:var(--txt); }
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #msg{ color:var(--txt); }
+html[data-theme="light"] #helpBtn,
+html[data-theme="light"] #histBtn,
+html[data-theme="light"] #compBtn{ color:var(--txt); border-color:var(--btn-bd); }
+html[data-theme="light"] #sheet,
+html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #helpbody{ color:#26313a; }
+html[data-theme="light"] #helpclose,
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
+html[data-theme="light"] #veil,
+html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
 </style>
 </head>
 <body>
@@ -1641,7 +1785,8 @@ const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
 async function loadHistory(){
   try{
     if(fdb){
-      const s=await fdb.ref(FPATH).once("value");
+      // 直近200件のみ取得（pushキーは時系列順なので limitToLast が使える）
+      const s=await fdb.ref(FPATH).limitToLast(200).once("value");
       const v=s.val();
       if(v==null) return [];
       const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
@@ -1650,13 +1795,6 @@ async function loadHistory(){
     if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
   }catch(e){ return null; }
-}
-async function writeHistory(h){
-  try{
-    if(fdb){ await fdb.ref(FPATH).set(h); return; }
-    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
-    localStorage.setItem(HKEY, JSON.stringify(h));
-  }catch(e){ console.error("history save failed",e); }
 }
 /* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
@@ -1783,6 +1921,22 @@ chooseSetup();
 })();
 <\/script>
 
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
+})();
+<\/script>
+
 </body>
 </html>
 </script>
@@ -1801,7 +1955,7 @@ chooseSetup();
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   body{
     font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 75%);
+    background:radial-gradient(ellipse at 50% -10%, var(--bgA), var(--bgB) 72%);
     color:var(--cream); min-height:100vh; user-select:none;
     display:flex; flex-direction:column; align-items:center;
   }
@@ -1920,6 +2074,42 @@ chooseSetup();
     font:inherit; font-size:.66rem; font-weight:800; padding:4px 11px; border-radius:999px;
     border:1.5px solid rgba(255,255,255,.4); background:transparent; color:inherit; cursor:pointer;
   }
+
+/* ===== テーマ切り替え（ライト/ダーク） ===== */
+:root{ --txt:#f6eeda; --bgA:#3d1a24; --bgB:#24101a;
+       --panel-bg:rgba(0,0,0,.26); --panel-bd:rgba(255,255,255,.14);
+       --btn-bd:rgba(255,255,255,.4); --slot-bg:rgba(255,255,255,.05); }
+html[data-theme="light"]{
+  --txt:#26313a; --bgA:#f7e8ec; --bgB:#ecd3da;
+  --panel-bg:rgba(255,255,255,.72); --panel-bd:rgba(0,0,0,.14);
+  --btn-bd:rgba(0,0,0,.32); --slot-bg:rgba(0,0,0,.05);
+}
+html[data-theme="light"] body{ color:var(--txt); }
+/* ライト時：薄い文字色の指定を読みやすい濃色に寄せる */
+html[data-theme="light"] .who,
+html[data-theme="light"] .pl,
+html[data-theme="light"] #field,
+html[data-theme="light"] #pyramid,
+html[data-theme="light"] #table,
+html[data-theme="light"] #board,
+html[data-theme="light"] #myarea,
+html[data-theme="light"] #me{ color:var(--txt); }
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #msg{ color:var(--txt); }
+html[data-theme="light"] #helpBtn,
+html[data-theme="light"] #histBtn,
+html[data-theme="light"] #compBtn{ color:var(--txt); border-color:var(--btn-bd); }
+html[data-theme="light"] #sheet,
+html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #helpbody{ color:#26313a; }
+html[data-theme="light"] #helpclose,
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
+html[data-theme="light"] #veil,
+html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
 </style>
 </head>
 <body>
@@ -1986,7 +2176,8 @@ const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
 async function loadHistory(){
   try{
     if(fdb){
-      const s=await fdb.ref(FPATH).once("value");
+      // 直近200件のみ取得（pushキーは時系列順なので limitToLast が使える）
+      const s=await fdb.ref(FPATH).limitToLast(200).once("value");
       const v=s.val();
       if(v==null) return [];
       const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
@@ -1995,13 +2186,6 @@ async function loadHistory(){
     if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
   }catch(e){ return null; }
-}
-async function writeHistory(h){
-  try{
-    if(fdb){ await fdb.ref(FPATH).set(h); return; }
-    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
-    localStorage.setItem(HKEY, JSON.stringify(h));
-  }catch(e){ console.error("history save failed",e); }
 }
 /* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
@@ -2600,6 +2784,22 @@ chooseSetup();
 })();
 <\/script>
 
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
+})();
+<\/script>
+
 </body>
 </html>
 </script>
@@ -2618,7 +2818,7 @@ chooseSetup();
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   body{
     font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 75%);
+    background:radial-gradient(ellipse at 50% -10%, var(--bgA), var(--bgB) 72%);
     color:var(--paper); min-height:100vh; user-select:none;
     display:flex; flex-direction:column; align-items:center;
   }
@@ -2727,6 +2927,42 @@ chooseSetup();
   }
   button.act.ghost{background:transparent; color:var(--paper); border:1.5px solid rgba(255,255,255,.4); box-shadow:none;}
   button.act.danger{background:var(--accent); color:#fff; box-shadow:0 3px 0 #9c3129;}
+
+/* ===== テーマ切り替え（ライト/ダーク） ===== */
+:root{ --txt:#f1e9d6; --bgA:#1d2433; --bgB:#12161f;
+       --panel-bg:rgba(0,0,0,.26); --panel-bd:rgba(255,255,255,.14);
+       --btn-bd:rgba(255,255,255,.4); --slot-bg:rgba(255,255,255,.05); }
+html[data-theme="light"]{
+  --txt:#26313a; --bgA:#e6ebf3; --bgB:#d2dae6;
+  --panel-bg:rgba(255,255,255,.72); --panel-bd:rgba(0,0,0,.14);
+  --btn-bd:rgba(0,0,0,.32); --slot-bg:rgba(0,0,0,.05);
+}
+html[data-theme="light"] body{ color:var(--txt); }
+/* ライト時：薄い文字色の指定を読みやすい濃色に寄せる */
+html[data-theme="light"] .who,
+html[data-theme="light"] .pl,
+html[data-theme="light"] #field,
+html[data-theme="light"] #pyramid,
+html[data-theme="light"] #table,
+html[data-theme="light"] #board,
+html[data-theme="light"] #myarea,
+html[data-theme="light"] #me{ color:var(--txt); }
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #msg{ color:var(--txt); }
+html[data-theme="light"] #helpBtn,
+html[data-theme="light"] #histBtn,
+html[data-theme="light"] #compBtn{ color:var(--txt); border-color:var(--btn-bd); }
+html[data-theme="light"] #sheet,
+html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #helpbody{ color:#26313a; }
+html[data-theme="light"] #helpclose,
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
+html[data-theme="light"] #veil,
+html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
 </style>
 </head>
 <body>
@@ -2789,7 +3025,8 @@ const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
 async function loadHistory(){
   try{
     if(fdb){
-      const s=await fdb.ref(FPATH).once("value");
+      // 直近200件のみ取得（pushキーは時系列順なので limitToLast が使える）
+      const s=await fdb.ref(FPATH).limitToLast(200).once("value");
       const v=s.val();
       if(v==null) return [];
       const arr = Array.isArray(v) ? v.filter(x=>x) : Object.keys(v).sort().map(k=>v[k]);
@@ -2798,13 +3035,6 @@ async function loadHistory(){
     if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
     return JSON.parse(localStorage.getItem(HKEY)||"[]");
   }catch(e){ return null; }
-}
-async function writeHistory(h){
-  try{
-    if(fdb){ await fdb.ref(FPATH).set(h); return; }
-    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
-    localStorage.setItem(HKEY, JSON.stringify(h));
-  }catch(e){ console.error(e); }
 }
 /* 保存。Firebaseは1件ずつ push（読み書き競合で他端末の記録を消さない） */
 async function saveRecord(rec){
@@ -3514,6 +3744,22 @@ chooseSetup();
 })();
 <\/script>
 
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
+})();
+<\/script>
+
 </body>
 </html>
 </script>
@@ -3532,7 +3778,7 @@ chooseSetup();
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   body{
     font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 72%);
+    background:radial-gradient(ellipse at 50% -10%, var(--bgA), var(--bgB) 72%);
     color:var(--sand); min-height:100vh; user-select:none;
     display:flex; flex-direction:column; align-items:center;
   }
@@ -3643,6 +3889,42 @@ chooseSetup();
     font:inherit; font-size:.66rem; font-weight:800; padding:4px 11px; border-radius:999px;
     border:1.5px solid rgba(255,255,255,.4); background:transparent; color:inherit; cursor:pointer;
   }
+
+/* ===== テーマ切り替え（ライト/ダーク） ===== */
+:root{ --txt:#f0e2c8; --bgA:#4a2a1c; --bgB:#241209;
+       --panel-bg:rgba(0,0,0,.26); --panel-bd:rgba(255,255,255,.14);
+       --btn-bd:rgba(255,255,255,.4); --slot-bg:rgba(255,255,255,.05); }
+html[data-theme="light"]{
+  --txt:#26313a; --bgA:#f6e7dc; --bgB:#e8d2c0;
+  --panel-bg:rgba(255,255,255,.72); --panel-bd:rgba(0,0,0,.14);
+  --btn-bd:rgba(0,0,0,.32); --slot-bg:rgba(0,0,0,.05);
+}
+html[data-theme="light"] body{ color:var(--txt); }
+/* ライト時：薄い文字色の指定を読みやすい濃色に寄せる */
+html[data-theme="light"] .who,
+html[data-theme="light"] .pl,
+html[data-theme="light"] #field,
+html[data-theme="light"] #pyramid,
+html[data-theme="light"] #table,
+html[data-theme="light"] #board,
+html[data-theme="light"] #myarea,
+html[data-theme="light"] #me{ color:var(--txt); }
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #msg{ color:var(--txt); }
+html[data-theme="light"] #helpBtn,
+html[data-theme="light"] #histBtn,
+html[data-theme="light"] #compBtn{ color:var(--txt); border-color:var(--btn-bd); }
+html[data-theme="light"] #sheet,
+html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #helpbody{ color:#26313a; }
+html[data-theme="light"] #helpclose,
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
+html[data-theme="light"] #veil,
+html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
 </style>
 </head>
 <body>
@@ -3718,7 +4000,8 @@ const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
 async function loadHistory(){
   try{
     if(fdb){
-      const s=await fdb.ref(FPATH).once("value");
+      // 直近200件のみ取得（pushキーは時系列順なので limitToLast が使える）
+      const s=await fdb.ref(FPATH).limitToLast(200).once("value");
       const v=s.val();
       if(v==null) return [];
       // push形式（キー付きオブジェクト）と旧配列形式の両方を読む
@@ -4166,6 +4449,22 @@ chooseSetup();
 })();
 <\/script>
 
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
+})();
+<\/script>
+
 </body>
 </html>
 </script>
@@ -4184,7 +4483,7 @@ chooseSetup();
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   body{
     font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 72%);
+    background:radial-gradient(ellipse at 50% -10%, var(--bgA), var(--bgB) 72%);
     color:var(--paper); min-height:100vh; user-select:none;
     display:flex; flex-direction:column; align-items:center;
   }
@@ -4303,6 +4602,42 @@ chooseSetup();
     font:inherit; font-size:.66rem; font-weight:800; padding:4px 11px; border-radius:999px;
     border:1.5px solid rgba(255,255,255,.4); background:transparent; color:inherit; cursor:pointer;
   }
+
+/* ===== テーマ切り替え（ライト/ダーク） ===== */
+:root{ --txt:#efe9d5; --bgA:#2f3a22; --bgB:#161c10;
+       --panel-bg:rgba(0,0,0,.26); --panel-bd:rgba(255,255,255,.14);
+       --btn-bd:rgba(255,255,255,.4); --slot-bg:rgba(255,255,255,.05); }
+html[data-theme="light"]{
+  --txt:#26313a; --bgA:#eaf0e0; --bgB:#d8e2c8;
+  --panel-bg:rgba(255,255,255,.72); --panel-bd:rgba(0,0,0,.14);
+  --btn-bd:rgba(0,0,0,.32); --slot-bg:rgba(0,0,0,.05);
+}
+html[data-theme="light"] body{ color:var(--txt); }
+/* ライト時：薄い文字色の指定を読みやすい濃色に寄せる */
+html[data-theme="light"] .who,
+html[data-theme="light"] .pl,
+html[data-theme="light"] #field,
+html[data-theme="light"] #pyramid,
+html[data-theme="light"] #table,
+html[data-theme="light"] #board,
+html[data-theme="light"] #myarea,
+html[data-theme="light"] #me{ color:var(--txt); }
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #msg{ color:var(--txt); }
+html[data-theme="light"] #helpBtn,
+html[data-theme="light"] #histBtn,
+html[data-theme="light"] #compBtn{ color:var(--txt); border-color:var(--btn-bd); }
+html[data-theme="light"] #sheet,
+html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #helpbody{ color:#26313a; }
+html[data-theme="light"] #helpclose,
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
+html[data-theme="light"] #veil,
+html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
 </style>
 </head>
 <body>
@@ -4371,7 +4706,8 @@ const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
 async function loadHistory(){
   try{
     if(fdb){
-      const s=await fdb.ref(FPATH).once("value");
+      // 直近200件のみ取得（pushキーは時系列順なので limitToLast が使える）
+      const s=await fdb.ref(FPATH).limitToLast(200).once("value");
       const v=s.val();
       if(v==null) return [];
       // push形式（キー付きオブジェクト）と旧配列形式の両方を読む
@@ -4920,6 +5256,22 @@ chooseSetup();
 })();
 <\/script>
 
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
+})();
+<\/script>
+
 </body>
 </html>
 </script>
@@ -4939,7 +5291,7 @@ chooseSetup();
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   body{
     font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 72%);
+    background:radial-gradient(ellipse at 50% -10%, var(--bgA), var(--bgB) 72%);
     color:#f0ecdf; min-height:100vh; user-select:none;
     display:flex; flex-direction:column; align-items:center;
   }
@@ -5038,6 +5390,42 @@ chooseSetup();
   #sheet h2{font-size:1rem; margin-bottom:10px; letter-spacing:.05em;}
   #sheet .body{font-size:.8rem; line-height:1.8; margin-bottom:14px; max-height:52vh; overflow-y:auto;}
   #sheet .btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+
+/* ===== テーマ切り替え（ライト/ダーク） ===== */
+:root{ --txt:#f0ecdf; --bgA:#20344a; --bgB:#0f1a26;
+       --panel-bg:rgba(0,0,0,.26); --panel-bd:rgba(255,255,255,.14);
+       --btn-bd:rgba(255,255,255,.4); --slot-bg:rgba(255,255,255,.05); }
+html[data-theme="light"]{
+  --txt:#26313a; --bgA:#e4edf5; --bgB:#cfdeeb;
+  --panel-bg:rgba(255,255,255,.72); --panel-bd:rgba(0,0,0,.14);
+  --btn-bd:rgba(0,0,0,.32); --slot-bg:rgba(0,0,0,.05);
+}
+html[data-theme="light"] body{ color:var(--txt); }
+/* ライト時：薄い文字色の指定を読みやすい濃色に寄せる */
+html[data-theme="light"] .who,
+html[data-theme="light"] .pl,
+html[data-theme="light"] #field,
+html[data-theme="light"] #pyramid,
+html[data-theme="light"] #table,
+html[data-theme="light"] #board,
+html[data-theme="light"] #myarea,
+html[data-theme="light"] #me{ color:var(--txt); }
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #msg{ color:var(--txt); }
+html[data-theme="light"] #helpBtn,
+html[data-theme="light"] #histBtn,
+html[data-theme="light"] #compBtn{ color:var(--txt); border-color:var(--btn-bd); }
+html[data-theme="light"] #sheet,
+html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #helpbody{ color:#26313a; }
+html[data-theme="light"] #helpclose,
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
+html[data-theme="light"] #veil,
+html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
 </style>
 </head>
 <body>
@@ -5104,7 +5492,8 @@ const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
 async function loadHistory(){
   try{
     if(fdb){
-      const s=await fdb.ref(FPATH).once("value");
+      // 直近200件のみ取得（pushキーは時系列順なので limitToLast が使える）
+      const s=await fdb.ref(FPATH).limitToLast(200).once("value");
       const v=s.val();
       if(v==null) return [];
       // push形式（キー付きオブジェクト）と旧配列形式の両方を読む
@@ -5654,6 +6043,22 @@ chooseSetup();
 })();
 <\/script>
 
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
+})();
+<\/script>
+
 </body>
 </html>
 </script>
@@ -5673,7 +6078,7 @@ chooseSetup();
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   body{
     font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 72%);
+    background:radial-gradient(ellipse at 50% -10%, var(--bgA), var(--bgB) 72%);
     color:#eaf3f8; min-height:100vh; user-select:none;
     display:flex; flex-direction:column; align-items:center;
   }
@@ -5760,6 +6165,42 @@ chooseSetup();
     border:none; cursor:pointer; background:var(--gold); color:#3b2d0c; box-shadow:0 3px 0 #b0932e;
   }
   button.act.g{background:transparent; color:#eaf3f8; border:1.5px solid rgba(255,255,255,.4); box-shadow:none;}
+
+/* ===== テーマ切り替え（ライト/ダーク） ===== */
+:root{ --txt:#eaf3f8; --bgA:#1f3a4d; --bgB:#0e1c28;
+       --panel-bg:rgba(0,0,0,.26); --panel-bd:rgba(255,255,255,.14);
+       --btn-bd:rgba(255,255,255,.4); --slot-bg:rgba(255,255,255,.05); }
+html[data-theme="light"]{
+  --txt:#26313a; --bgA:#e4eff5; --bgB:#cde0ea;
+  --panel-bg:rgba(255,255,255,.72); --panel-bd:rgba(0,0,0,.14);
+  --btn-bd:rgba(0,0,0,.32); --slot-bg:rgba(0,0,0,.05);
+}
+html[data-theme="light"] body{ color:var(--txt); }
+/* ライト時：薄い文字色の指定を読みやすい濃色に寄せる */
+html[data-theme="light"] .who,
+html[data-theme="light"] .pl,
+html[data-theme="light"] #field,
+html[data-theme="light"] #pyramid,
+html[data-theme="light"] #table,
+html[data-theme="light"] #board,
+html[data-theme="light"] #myarea,
+html[data-theme="light"] #me{ color:var(--txt); }
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #msg{ color:var(--txt); }
+html[data-theme="light"] #helpBtn,
+html[data-theme="light"] #histBtn,
+html[data-theme="light"] #compBtn{ color:var(--txt); border-color:var(--btn-bd); }
+html[data-theme="light"] #sheet,
+html[data-theme="light"] #helppanel{ background:#f7f4ec; color:#26313a; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #helpbody{ color:#26313a; }
+html[data-theme="light"] #helpclose,
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
+html[data-theme="light"] #veil,
+html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
 </style>
 </head>
 <body>
@@ -5823,7 +6264,8 @@ const num=(v,d=0)=>{ const n=Number(v); return Number.isFinite(n)?n:d; };
 async function loadHistory(){
   try{
     if(fdb){
-      const s=await fdb.ref(FPATH).once("value");
+      // 直近200件のみ取得（pushキーは時系列順なので limitToLast が使える）
+      const s=await fdb.ref(FPATH).limitToLast(200).once("value");
       const v=s.val();
       if(v==null) return [];
       // push形式（キー付きオブジェクト）と旧配列形式の両方を読む
@@ -6277,6 +6719,22 @@ chooseSetup();
   document.getElementById("helpclose").onclick=close;
   veil.onclick=function(e){ if(e.target===veil) close(); };
   window.openHelp=open;
+})();
+<\/script>
+
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
 })();
 <\/script>
 
