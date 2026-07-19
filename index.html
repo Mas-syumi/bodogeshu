@@ -42,6 +42,8 @@
   .t-hannin{background:linear-gradient(160deg,#33405c,#141821);}
   .t-jackal{background:linear-gradient(160deg,#8a4a25,#33190c);}
   .t-goki{background:linear-gradient(160deg,#4a5a2c,#1b2112);}
+  .t-kotori{background:linear-gradient(160deg,#2f5068,#111f2b);}
+  .t-pengin{background:linear-gradient(160deg,#2a4a5e,#0f1e28);}
   .howto{
     position:absolute; right:10px; bottom:10px;
     font:inherit; font-size:.6rem; font-weight:800; padding:3px 9px; border-radius:999px;
@@ -126,6 +128,10 @@ const GAMES=[
    ds:"自分のカードだけ見えない。全員の合計を推理して数を釣り上げるチキンレース。", pl:"3〜6人 ・ 難易度3段階"},
   {id:"gokipoker", cls:"t-goki", ico:"🪳", nm:"むしポーカー", en:"BUG BLUFF",
    ds:"「これはカエルです」…嘘か本当か。嫌われ者を押し付け合う、純粋なブラフ勝負。", pl:"2〜6人 ・ 難易度3段階"},
+  {id:"kotori", cls:"t-kotori", ico:"🐦", nm:"ことりならべ", en:"NEXT大富豪",
+   ds:"手札は並べ替えできない。場のカードを回収して役を育て、一気に出し切る大富豪系。", pl:"3〜6人 ・ 難易度3段階"},
+  {id:"pengin", cls:"t-pengin", ico:"🐧", nm:"ぺんぎんの山", en:"PENGUIN PYRAMID",
+   ds:"5色のペンギンをピラミッドに積む。土台にない色は上に積めない。出し切れずに残すと失点。", pl:"2〜6人 ・ 難易度3段階"},
 ];
 const $=id=>document.getElementById(id);
 
@@ -146,7 +152,7 @@ document.querySelectorAll(".howto").forEach(el=>{
   el.onclick=e=>{ e.stopPropagation(); showHelp(el.dataset.help); };
 });
 
-const RULES={"nimmt": {"title": "うしのむれ", "html": "<p class=\"hgoal\"><b>目的</b>　牛マーク（🐮）を最も少なく引き取った人の勝ち。誰かが66🐮に達したラウンドで終了です。</p><h3>カード</h3><p>1〜104の数字カード。数字ごとに牛マークの数が違います。<br><b>5の倍数＝🐮2</b> ／ <b>10の倍数＝🐮3</b> ／ <b>11の倍数＝🐮5</b> ／ <b>55＝🐮7</b> ／ それ以外＝🐮1<br>牛マークがそのまま失点です。キリのいい数字ほど危険。</p><h3>流れ</h3><p>場に4つの列があります。全員が手札から1枚を<b>同時に</b>選び、小さい数字の人から順に置いていきます。<br>置く列は選べません。<b>自分の数字より小さく、かつ最も近い数字が末尾にある列</b>に自動的に置かれます。</p><h3>引き取り</h3><p>列は5枚まで。<b>6枚目を置くことになった人が、その列の5枚をすべて引き取ります</b>（＝失点）。<br>引き取ったあと、その列は自分のカード1枚だけになります。</p><h3>どの列にも置けないとき</h3><p>自分のカードが<b>どの列の末尾よりも小さい</b>場合、好きな列を1つ選んで引き取ります。<br>手札に小さい数字を抱え込んでいると、これを強いられます。</p><h3>コツ</h3><p>列が4〜5枚まで伸びていると、次に置いた人が引き取る危険があります。<br>「安い列をわざと引き取って、場をリセットする」のも立派な戦術です。<br>全員同時出しなので、<b>他の人がどの数字を出しそうか</b>を読むゲームです。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない札から相手の手札を推定し（決定化サンプリング）、そこからラウンド終了までを何百回もシミュレーションして、失点の期待値が最小になる札を選びます。<br>すべての可能性を読み切る完全探索ではなく、シミュレーションによる<b>近似</b>です。それでも、単純に「安全そうな列」を選ぶだけのCPU（＝ふつう）と対戦させると、平均失点は 13.2 → 7.6、勝率は 25%（4人戦の基準値）→ 46.7% になります。</p>"}, "gems": {"title": "宝石商", "html": "<p class=\"hgoal\"><b>目的</b>　発展カードで得点を集め、先に15点へ。全員の手番数が揃った時点で集計し、同点ならカード枚数が少ない方の勝ちです。</p><h3>手番でできること（3つのうち1つ）</h3><p><b>① 宝石を取る</b>：違う色を3枚 ／ または同じ色を2枚（山に4枚以上残っている場合のみ）<br><b>② カードを買う</b>：コストを支払って発展カードを購入<br><b>③ カードを確保する</b>：1枚を手元にキープし、金を1枚もらう（最大3枚）</p><h3>ボーナスが雪だるま式に効く</h3><p>買った発展カードは<b>永続の割引</b>になります。白のカードを2枚持っていれば、以後どのカードも白のコストが2つ安くなります。<br>序盤は安いカードでボーナスを増やし、終盤に高得点カードを買うのが基本です。</p><h3>宝石は10枚まで</h3><p>手持ちの宝石が10枚を超えたら超過分を捨てます。取りすぎに注意。</p><h3>貴族</h3><p>上部の貴族タイルは、指定された色のボーナス数を満たすと<b>自動的に訪問し+3点</b>。色を意図的に偏らせる価値があります。</p><h3>金（ワイルド）</h3><p>確保でもらえる金は、どの色の代わりにも使えます。高額カードを買う切り札です。</p><h3>操作</h3><p>宝石をタップして選び「宝石を取る」。同じ宝石を<b>2回タップ</b>で同色2枚になります。金枠のカードは今すぐ買えるカードです。</p><h3>CPUについて</h3><p>つよいCPUは、あなたがあと少しで買えそうな高得点カードを「確保」で横取りしてきます。狙いのカードは早めに押さえましょう。</p>"}, "koibumi": {"title": "恋文", "html": "<p class=\"hgoal\"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークン獲得。規定数（2人=7 / 3人=5 / 4人=4）を先取した人の勝ちです。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、最も強いカードの人が勝ち。同値なら捨て札の合計で比較します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>"}, "hannin": {"title": "踊る容疑者", "html": "<p class=\"hgoal\"><b>目的</b>　犯人カードの持ち主を暴けば探偵側の勝ち。犯人が最後の1枚として犯人カードを出せたら犯人の勝ちです。</p><h3>まず知っておくこと</h3><p><b>犯人は固定されていません。</b>犯人カードは取り引き・うわさ・情報操作で人から人へ移ります。<br>いま持っている人が犯人。さっきまで犯人だった人が今は無関係、ということも普通に起こります。</p><h3>勝ち方は3つ</h3><p><b>① 探偵</b>で犯人カードの持ち主を指名して当てる<br><b>② いぬ</b>で相手の手札から犯人カードを引き当てる<br><b>③ 犯人カードを、手札が最後の1枚になったときに出す</b>（逃げ切り）</p><h3>重要：アリバイ</h3><p>犯人カードを持っていても、<b>アリバイを一緒に持っていれば探偵に指名されても「いいえ」と言えます</b>。<br>逆に、アリバイを持たない犯人は探偵に怯えることになります。</p><h3>主なカード</h3><p><b>探偵</b>：1人を指名（最初の一巡では使用不可） ／ <b>いぬ</b>：1人の手札からランダムに1枚<br><b>目撃者</b>：1人の手札を全部見る ／ <b>少年</b>：いま犯人カードを持つ人を自分だけが知る<br><b>取り引き</b>：1人と1枚ずつ裏向きで交換 ／ <b>うわさ</b>：全員が右隣からランダムに1枚<br><b>情報操作</b>：全員が1枚選んで左隣へ ／ <b>たくらみ</b>：以後、犯人と運命共同体<br><b>アリバイ</b>：持つ限り探偵を否認できる ／ <b>一般人</b>：何も起こらない</p><h3>たくらみの罠</h3><p>たくらみを出した人は犯人の味方です。<b>たくらみ済の人が探偵で犯人を当てても、道連れで負けます</b>。</p><h3>画面の見方</h3><p>あなたが得た情報（見た手札、少年情報、受け取った札、犯人カードが自分に来た警告）は、手札の上のメモ欄に残ります。</p><h3>CPUについて</h3><p>つよいCPUは、犯人カードを渡した相手を記憶し、うわさや取り引きで動くたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>"}, "jackal": {"title": "ジャッカル", "html": "<p class=\"hgoal\"><b>目的</b>　自分のカードだけが見えない状態で「全員の合計以下」の数を宣言し続けるチキンレース。ライフを3回失うと脱落、最後まで残れば勝ちです。</p><h3>自分のカードだけ見えない</h3><p>全員が1枚ずつカードを引き、<b>自分だけ見えないように額に掲げます</b>。<br>他の人のカードは全部見えるので、<b>見えている合計＋自分の未知の1枚</b>を推理することになります。</p><h3>流れ</h3><p>手番の人は、全員の合計以下だと思う数を宣言します。次の人は<b>それより大きい数を宣言</b>するか、「ジャッカル！」と疑うかを選びます。</p><h3>「ジャッカル！」で疑う</h3><p>直前の宣言が合計を<b>超えている</b>と思ったら宣言します。全員がカードを公開して答え合わせ。<br>宣言 > 合計 なら<b>宣言した人</b>がライフを失い、宣言 ≦ 合計 なら<b>疑った人</b>がライフを失います。</p><h3>カード構成（36枚）</h3><p>1〜5が各4枚 ／ 0・10が各3枚 ／ -5・15が各2枚 ／ -10・20が各1枚<br>特殊カードが各1枚：<b>×2</b>（合計を2倍） ／ <b>MAX→0</b>（最大の数字を0にする） ／ <b>夜0</b>（0として扱い、次から山札を作り直す） ／ <b>?</b>（公開時に山札から1枚追加）</p><h3>コツ</h3><p>使ったカードは捨て札に残り、画面下でいつでも見られます。<b>20や-10が既に出ているか</b>を数えれば、自分のカードの見当がつきます。<br>また、みんなが妙に高い数を言うなら、あなたが大きい数字を持っている可能性が高いです。</p><h3>CPUについて</h3><p>つよいCPUは捨て札を数え、自分のカードの確率分布から合計の期待値を計算します。時々つり上げのブラフも打ってきます。</p>"}, "gokipoker": {"title": "むしポーカー", "html": "<p class=\"hgoal\"><b>目的</b>　「一人負け」を決めるゲーム。同じ生き物を4枚（2人戦は5枚）引き取るか、8種類すべて引き取るか、手札が尽きて出せなくなった人の負けです。</p><h3>流れ</h3><p>手番の人は手札から1枚を裏向きで誰かに渡し、<b>「これは○○です」と宣言</b>します。<b>本当でも嘘でもOK</b>。</p><h3>受け取った人の選択肢</h3><p><b>①「本当だ」または「嘘だ」と答える</b> → カードを公開。<br>　当てられたら<b>渡した人</b>が引き取り、外したら<b>自分</b>が引き取ります。<br><b>② 覗いて回す</b> → 自分だけカードを確認し、まだ見ていない人に回します。宣言は変えてもOK。<br>　ただし<b>全員が見てしまったら、最後の人は必ず答えなければなりません</b>。</p><h3>引き取ったら</h3><p>そのカードは表向きで自分の前に置かれ、全員に見えます。引き取った人が次の親になります。</p><h3>数えることが最大のコツ</h3><p>各生き物は8枚ずつしかありません。<b>場に見えている枚数＋自分の手札の枚数</b>を数えて、残りが0なら、その宣言は<b>確実に嘘</b>です。</p><h3>押し付け合いの読み合い</h3><p>相手が3枚集めている生き物を、<b>本当のことを言って</b>渡すのが強力です。相手は怖くて「嘘だ」と言いたくなり、外して引き取ってしまいます。</p><h3>CPUについて</h3><p>つよいCPUは残り枚数を数えて確実な嘘を見抜き、あなたが3枚集めている生き物を狙って押し付けてきます。</p>"}};
+const RULES={"nimmt": {"title": "うしのむれ", "html": "<p class=\"hgoal\"><b>目的</b>　牛マーク（🐮）を最も少なく引き取った人の勝ち。誰かが66🐮に達したラウンドで終了です。</p><h3>カード</h3><p>1〜104の数字カード。数字ごとに牛マークの数が違います。<br><b>5の倍数＝🐮2</b> ／ <b>10の倍数＝🐮3</b> ／ <b>11の倍数＝🐮5</b> ／ <b>55＝🐮7</b> ／ それ以外＝🐮1<br>牛マークがそのまま失点です。キリのいい数字ほど危険。</p><h3>流れ</h3><p>場に4つの列があります。全員が手札から1枚を<b>同時に</b>選び、小さい数字の人から順に置いていきます。<br>置く列は選べません。<b>自分の数字より小さく、かつ最も近い数字が末尾にある列</b>に自動的に置かれます。</p><h3>引き取り</h3><p>列は5枚まで。<b>6枚目を置くことになった人が、その列の5枚をすべて引き取ります</b>（＝失点）。<br>引き取ったあと、その列は自分のカード1枚だけになります。</p><h3>どの列にも置けないとき</h3><p>自分のカードが<b>どの列の末尾よりも小さい</b>場合、好きな列を1つ選んで引き取ります。<br>手札に小さい数字を抱え込んでいると、これを強いられます。</p><h3>コツ</h3><p>列が4〜5枚まで伸びていると、次に置いた人が引き取る危険があります。<br>「安い列をわざと引き取って、場をリセットする」のも立派な戦術です。<br>全員同時出しなので、<b>他の人がどの数字を出しそうか</b>を読むゲームです。</p><h3>上級（プロ）ルール</h3><p>ゲーム開始時に選べます。<br>通常は、カードは「末尾が自分より小さく、差が最も近い列」に置かれます。<br><b>プロルールでは、列の先頭（左端）にも置けるようになります</b>。カードより先頭が大きい列なら、その手前に入れられます。<br>置き場所は<b>末尾・先頭を問わず、数値差が最小の場所に自動で決まります</b>（若い数字の人から順に処理）。前置きでその列が<b>6枚目</b>になった人は、通常どおり引き取りです。<br>小さいカードにも置き場所が生まれるぶん、駆け引きが深くなる上級者向けルールです。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない札から相手の手札を推定し（決定化サンプリング）、そこからラウンド終了までを何百回もシミュレーションして、失点の期待値が最小になる札を選びます。<br>すべての可能性を読み切る完全探索ではなく、シミュレーションによる<b>近似</b>です。それでも、単純に「安全そうな列」を選ぶだけのCPU（＝ふつう）と対戦させると、平均失点は 13.2 → 7.6、勝率は 25%（4人戦の基準値）→ 46.7% になります。</p>"}, "gems": {"title": "宝石商", "html": "<p class=\"hgoal\"><b>目的</b>　発展カードで得点を集め、先に15点へ。全員の手番数が揃った時点で集計し、同点ならカード枚数が少ない方の勝ちです。</p><h3>手番でできること（3つのうち1つ）</h3><p><b>① 宝石を取る</b>：違う色を3枚 ／ または同じ色を2枚（山に4枚以上残っている場合のみ）<br><b>② カードを買う</b>：コストを支払って発展カードを購入<br><b>③ カードを確保する</b>：1枚を手元にキープし、金を1枚もらう（最大3枚）</p><h3>ボーナスが雪だるま式に効く</h3><p>買った発展カードは<b>永続の割引</b>になります。白のカードを2枚持っていれば、以後どのカードも白のコストが2つ安くなります。<br>序盤は安いカードでボーナスを増やし、終盤に高得点カードを買うのが基本です。</p><h3>宝石は10枚まで</h3><p>手持ちの宝石が10枚を超えたら超過分を捨てます。取りすぎに注意。</p><h3>貴族</h3><p>上部の貴族タイルは、指定された色のボーナス数を満たすと<b>自動的に訪問し+3点</b>。色を意図的に偏らせる価値があります。</p><h3>金（ワイルド）</h3><p>確保でもらえる金は、どの色の代わりにも使えます。高額カードを買う切り札です。</p><h3>手番順と操作</h3><p>画面上部に<b>手番順</b>が表示されます（金枠が現在の手番）。先手はランダムに決まり、以降その順で時計回りに回ります。<br>宝石をタップして選び「宝石を取る」。同じ宝石を<b>2回タップ</b>で同色2枚になります。金枠のカードは今すぐ買えるカードです。</p><h3>CPUについて</h3><p>つよいCPUは、あなたがあと少しで買えそうな高得点カードを「確保」で横取りしてきます。狙いのカードは早めに押さえましょう。</p>"}, "koibumi": {"title": "恋文", "html": "<p class=\"hgoal\"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークンを1個獲得。<b>先に3個</b>集めた人の勝ちです（第2版の正規ルール）。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。<br>ヘッダーの<b>「内訳」</b>ボタンで、16枚の構成と残り枚数がいつでも確認できます。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、最も強いカードの人が勝ち。同値なら捨て札の合計で比較します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>"}, "hannin": {"title": "踊る容疑者", "html": "<p class=\"hgoal\"><b>目的</b>　犯人カードの持ち主を暴けば探偵側の勝ち。犯人が最後の1枚として犯人カードを出せたら犯人の勝ちです。</p><h3>まず知っておくこと</h3><p><b>犯人は固定されていません。</b>犯人カードは取り引き・うわさ・情報操作で人から人へ移ります。<br>いま持っている人が犯人。さっきまで犯人だった人が今は無関係、ということも普通に起こります。</p><h3>勝ち方は3つ</h3><p><b>① 探偵</b>で犯人カードの持ち主を指名して当てる<br><b>② いぬ</b>で相手の手札から犯人カードを引き当てる<br><b>③ 犯人カードを、手札が最後の1枚になったときに出す</b>（逃げ切り）</p><h3>重要：アリバイ</h3><p>犯人カードを持っていても、<b>アリバイを一緒に持っていれば探偵に指名されても「いいえ」と言えます</b>。<br>逆に、アリバイを持たない犯人は探偵に怯えることになります。</p><h3>主なカード</h3><p><b>探偵</b>：1人を指名（最初の一巡では使用不可） ／ <b>いぬ</b>：1人の手札からランダムに1枚<br><b>目撃者</b>：1人の手札を全部見る ／ <b>少年</b>：いま犯人カードを持つ人を自分だけが知る<br><b>取り引き</b>：1人と1枚ずつ裏向きで交換 ／ <b>うわさ</b>：全員が右隣からランダムに1枚<br><b>情報操作</b>：全員が1枚選んで左隣へ ／ <b>たくらみ</b>：以後、犯人と運命共同体<br><b>アリバイ</b>：持つ限り探偵を否認できる ／ <b>一般人</b>：何も起こらない</p><h3>たくらみの罠</h3><p>たくらみを出した人は犯人の味方です。<b>たくらみ済の人が探偵で犯人を当てても、道連れで負けます</b>。</p><h3>画面の見方</h3><p>上部の<b>円</b>が席順です。あなたは常に下、手番は<b>時計回り</b>に進みます。<br>「うわさ」は<b>右隣（前の手番の人）</b>から引き、「情報操作」は<b>左隣（次の手番の人）</b>へ渡します。<br>あなたが得た情報（見た手札、少年情報、受け取った札、犯人カードが自分に来た警告）は、手札の上のメモ欄に残ります。</p><h3>CPUについて</h3><p>つよいCPUは、犯人カードを渡した相手を記憶し、うわさや取り引きで動くたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>"}, "jackal": {"title": "ジャッカル", "html": "<p class=\"hgoal\"><b>目的</b>　自分のカードだけが見えない状態で「全員の合計以下」の数を宣言し続けるチキンレース。ライフを3回失うと脱落、最後まで残れば勝ちです。</p><h3>自分のカードだけ見えない</h3><p>全員が1枚ずつカードを引き、<b>自分だけ見えないように額に掲げます</b>。<br>他の人のカードは全部見えるので、<b>見えている合計＋自分の未知の1枚</b>を推理することになります。</p><h3>流れ</h3><p>手番の人は、全員の合計以下だと思う数を宣言します。次の人は<b>それより大きい数を宣言</b>するか、「ジャッカル！」と疑うかを選びます。</p><h3>「ジャッカル！」で疑う</h3><p>直前の宣言が合計を<b>超えている</b>と思ったら宣言します。全員がカードを公開して答え合わせ。<br>宣言 > 合計 なら<b>宣言した人</b>がライフを失い、宣言 ≦ 合計 なら<b>疑った人</b>がライフを失います。</p><h3>カード構成（36枚）</h3><p>1〜5が各4枚 ／ 0・10が各3枚 ／ -5・15が各2枚 ／ -10・20が各1枚<br>特殊カードが各1枚：<b>×2</b>（合計を2倍） ／ <b>MAX→0</b>（最大の数字を0にする） ／ <b>夜0</b>（0として扱い、次から山札を作り直す） ／ <b>?</b>（公開時に山札から1枚追加）</p><h3>コツ</h3><p>使ったカードは捨て札に残り、画面下でいつでも見られます。<b>20や-10が既に出ているか</b>を数えれば、自分のカードの見当がつきます。<br>ヘッダーの<b>「内訳」</b>ボタンで、36枚の構成と、どれが既に出たかを一覧できます。<br>また、みんなが妙に高い数を言うなら、あなたが大きい数字を持っている可能性が高いです。</p><h3>CPUについて</h3><p>つよいCPUは捨て札を数え、自分のカードの確率分布から合計の期待値を計算します。時々つり上げのブラフも打ってきます。</p>"}, "gokipoker": {"title": "むしポーカー", "html": "<p class=\"hgoal\"><b>目的</b>　「一人負け」を決めるゲーム。同じ生き物を4枚（2人戦は5枚）引き取るか、8種類すべて引き取るか、手札が尽きて出せなくなった人の負けです。</p><h3>流れ</h3><p>手番の人は手札から1枚を裏向きで誰かに渡し、<b>「これは○○です」と宣言</b>します。<b>本当でも嘘でもOK</b>。</p><h3>受け取った人の選択肢</h3><p><b>①「本当だ」または「嘘だ」と答える</b> → カードを公開。<br>　当てられたら<b>渡した人</b>が引き取り、外したら<b>自分</b>が引き取ります。<br><b>② 覗いて回す</b> → 自分だけカードを確認し、まだ見ていない人に回します。宣言は変えてもOK。<br>　ただし<b>全員が見てしまったら、最後の人は必ず答えなければなりません</b>。</p><h3>引き取ったら</h3><p>そのカードは表向きで自分の前に置かれ、全員に見えます。引き取った人が次の親になります。</p><h3>数えることが最大のコツ</h3><p>各生き物は8枚ずつしかありません。<b>場に見えている枚数＋自分の手札の枚数</b>を数えて、残りが0なら、その宣言は<b>確実に嘘</b>です。<br>ヘッダーの<b>「内訳」</b>ボタンを押すと、この計算を自動でやってくれます。</p><h3>押し付け合いの読み合い</h3><p>相手が3枚集めている生き物を、<b>本当のことを言って</b>渡すのが強力です。相手は怖くて「嘘だ」と言いたくなり、外して引き取ってしまいます。</p><h3>CPUについて</h3><p>つよいCPUは残り枚数を数えて確実な嘘を見抜き、あなたが3枚集めている生き物を狙って押し付けてきます。</p>"}, "kotori": {"title": "ことりならべ", "html": "<p class=\"hgoal\"><b>目的</b>　手札をいち早く出し切る「大富豪」系のゲーム。最後まで残るとペンギンを失い、2個失うと脱落。最後まで生き残れば勝ちです。</p><h3>手札は並べ替えできない</h3><p>配られた手札は<b>並び順を変えられません</b>。この制約がこのゲームの肝です。<br>だから最初はバラバラで、大きな役が作れません。</p><h3>カードの出し方</h3><p>自分の番に、手札からカードを出します。<b>手札で隣り合っている同じ数字は、まとめて出せます</b>（例：3が3枚並んでいれば3枚出し）。<br>場に出ているカードより<b>強い役</b>しか出せません。出せない・出したくないときはパスします。</p><h3>役の強さ</h3><p><b>枚数が多いほど強い</b>（1が2枚 ＞ 7が1枚）。<br><b>同じ枚数なら、数字が大きいほど強い</b>（7が2枚 ＞ 3が2枚）。</p><h3>カードを回収して手札を育てる（重要）</h3><p>手札を強化する方法が2つあります。<br>①<b>カードを出したとき</b>：直前に場にあったカードを「手札に加える」か「捨てる」か選べます。<br>②<b>パスしたとき</b>：山札から1枚引き、「手札に加える」か「捨てる」か選べます。<br>加えるときは絵をタップして同じ数字の隣に差し込み、<b>大きな役を育てられます</b>。並べ替えできないぶん、これが手札を強化する手段です。</p><h3>場が流れる</h3><p>カードを出した人以外の全員がパスをして、再びその人の番が来たら、場のカードは全て捨てられ、その人から好きなカードを出せます。</p><h3>勝敗</h3><p>手札を出し切った人から順に「あがり」。最後まで残った人がペンギンを1個失います。<br>ペンギンを2個失うと脱落。生き残れば勝ちです。</p><h3>CPUについて</h3><p>つよいCPUは、場のカードを回収して手札を育て、大きな役は温存し、終盤に一気に出し切る動きをします。</p>"}, "pengin": {"title": "ぺんぎんの山", "html": "<p class=\"hgoal\"><b>目的</b>　手札のペンギンをピラミッドに置いて、いち早く出し切るゲーム。置けずに残った手札がシャチチップ（失点）になります。人数分のラウンドを終えて、失点が最も少ない人の勝ちです。</p><h3>カード</h3><p>5色のペンギンが各7枚、全35枚。色だけが意味を持ちます。</p><h3>ピラミッドを積む</h3><p>手番に手札から1枚をピラミッドに置きます。<br><b>最下段</b>は好きな色を置けます（最大8枚、2人・5人時は7枚）。左から順に埋まります。</p><h3>上の段のルール（重要）</h3><p>上の段に置けるのは、<b>すぐ真下で隣り合う2枚のうち、どちらかと同じ色</b>のときだけです。<br>たとえば下が「赤・青」なら、その上には赤か青しか置けません。<br>土台にない色は、上に積むことができません。</p><h3>置けなくなったら脱落</h3><p>自分の番に、手札のどのカードも置けなくなったら<b>脱落</b>。残った手札の枚数分シャチチップ（失点）を受け取ります。</p><h3>勝敗</h3><p>全員が脱落するか、誰かが出し切るとラウンド終了。人数分のラウンドを行い、<b>シャチチップの合計が最も少ない人</b>の勝ちです。</p><h3>コツ</h3><p>「まだ積める色」「その色の残り枚数」「自分の手札」を見比べるゲームです。<br>自分が多く持つ色を土台に置いて上に伸ばせるようにし、逆に相手が持っていそうな色は土台から締め出すのが基本です。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない各色の枚数を数え、自分の色を通しやすく、相手の色を詰まらせるように置いてきます。</p>"}};
 function showHelp(id){
   const r=RULES[id];
   document.getElementById("helptitle").textContent=r.title+" — 遊び方";
@@ -473,7 +479,7 @@ const CPU_NAMES=["モー吉","ベコ美","ウシ王","カウ子","ホル斉藤",
 const DIFF_LABEL={easy:"やさしい",normal:"ふつう",hard:"つよい"};
 let P=[];
 let hands, rows, totals, roundPts, roundNo, turnNo, picks, seen;
-let diffLevel="normal", MC_SIMS=400;
+let diffLevel="normal", MC_SIMS=400, proRule=false;
 let selIdx = -1, resolvingChoice = null;
 
 // ================= dom =================
@@ -537,7 +543,7 @@ function renderHand(enabled){
 }
 
 function msg(html){ msgEl.innerHTML = html; }
-function renderStatus(){ statusEl.textContent = `R${roundNo} ・ ターン${turnNo}/10 ・ CPU:${DIFF_LABEL[diffLevel]} ・ 66🐮で終了`; }
+function renderStatus(){ statusEl.textContent = `R${roundNo} ・ ターン${turnNo}/10 ・ CPU:${DIFF_LABEL[diffLevel]}${proRule?" ・ プロ":""} ・ 66🐮で終了`; }
 
 // ================= setup =================
 function chooseSetup(){
@@ -552,9 +558,19 @@ function chooseDiff(nCpu){
   ptitle.textContent="CPUの強さを選択";
   plines.innerHTML=`やさしい：ほぼ気まぐれ<br>ふつう：安全そうな列に置く<br>つよい：相手の手札を推定し、ラウンド終了まで先読みする`;
   setChoices([
-    ["やさしい",()=>newGame(nCpu,"easy")],
-    ["ふつう",()=>newGame(nCpu,"normal")],
-    ["つよい",()=>newGame(nCpu,"hard")],
+    ["やさしい",()=>chooseRule(nCpu,"easy")],
+    ["ふつう",()=>chooseRule(nCpu,"normal")],
+    ["つよい",()=>chooseRule(nCpu,"hard")],
+  ]);
+}
+function chooseRule(nCpu,diff){
+  overlay.classList.add("show");
+  ptitle.textContent="ルールを選択";
+  plines.innerHTML=`<b>通常</b>：どの列にも置けない小さいカードを出すと、失点が最小の列を自動で引き取ります。<br><br>
+    <b>上級（プロフェッショナル）</b>：そのとき、<b>好きな列を選んで引き取れます</b>。さらに、引き取った列にそのカードを置くので、次に何が起きるかまで読む必要があります。上級者向けの駆け引きルールです。`;
+  setChoices([
+    ["通常ルール",()=>newGame(nCpu,diff,false)],
+    ["上級（プロ）ルール",()=>newGame(nCpu,diff,true)],
   ]);
 }
 function setChoices(list){
@@ -569,11 +585,12 @@ function setChoices(list){
     box.appendChild(b);
   }
 }
-function newGame(nCpu,diff){
+function newGame(nCpu,diff,pro){
   const box=document.getElementById("choices"); if(box) box.remove();
   overlay.classList.remove("show");
   pbtn.style.display="inline-block";
   diffLevel=diff||"normal";
+  proRule=!!pro;
   P=[{name:"あなた",cpu:false}];
   for(let i=0;i<nCpu;i++) P.push({name:CPU_NAMES[i],cpu:true});
   totals=P.map(()=>0); roundNo=0;
@@ -602,17 +619,52 @@ function targetRow(card, rws){
   rws.forEach((r,i)=>{ const t=r[r.length-1]; if(t<card && t>bestTail){bestTail=t; best=i;} });
   return best;
 }
+/* プロルール配置：末尾に置ける列（末尾差）と、先頭に前置きできる列（先頭差）を
+   すべて比較し、数値差が最小の場所に置く。全自動（プレイヤーは選べない）。
+   戻り値 {row, front}：front=true なら先頭に前置き。 */
+function proPlace(card, rws){
+  let best=null, bestGap=Infinity, bestHeads=Infinity;
+  rws.forEach((r,i)=>{
+    const tail=r[r.length-1], head=r[0];
+    if(tail<card){                          // 末尾に追加できる（通常の置き方）
+      const gap=card-tail, h=rowHeads(r);
+      if(gap<bestGap || (gap===bestGap && h<bestHeads)){ bestGap=gap; bestHeads=h; best={row:i,front:false}; }
+    }
+    if(head>card){                          // 先頭に前置きできる（プロ限定）
+      const gap=head-card, h=rowHeads(r);
+      if(gap<bestGap || (gap===bestGap && h<bestHeads)){ bestGap=gap; bestHeads=h; best={row:i,front:true}; }
+    }
+  });
+  return best;   // 末尾にも先頭にも置けない場合のみ null
+}
 const rowHeads = r => r.reduce((a,c)=>a+heads(c),0);
 function lowestRow(rws){
   let best=0,bv=Infinity;
   rws.forEach((r,i)=>{const v=rowHeads(r)*10+r.length; if(v<bv){bv=v;best=i;}});
   return best;
 }
-/* トリック解決（純粋関数版）。失点配列を返す */
-function simTrick(rws, picks){
+/* トリック解決（純粋関数版）。失点配列を返す。pro=プロルール */
+function simTrick(rws, picks, pro){
   const pts=picks.map(()=>0);
   const order=picks.map((c,i)=>({i,c})).sort((a,b)=>a.c-b.c);
   for(const {i,c} of order){
+    if(pro){
+      const pl=proPlace(c,rws);            // 末尾/先頭を問わず差が最小の場所
+      if(pl){
+        if(pl.front){
+          rws[pl.row].unshift(c);
+          if(rws[pl.row].length>=6){ pts[i]+=rowHeads(rws[pl.row].slice(1)); rws[pl.row]=[c]; }
+        } else {
+          if(rws[pl.row].length>=5){ pts[i]+=rowHeads(rws[pl.row]); rws[pl.row]=[c]; }
+          else rws[pl.row].push(c);
+        }
+        continue;
+      }
+      // どこにも置けない → 引き取り
+      const ri=lowestRow(rws); pts[i]+=rowHeads(rws[ri]); rws[ri]=[c];
+      continue;
+    }
+    // 通常ルール
     let ri=targetRow(c,rws);
     if(ri<0){ ri=lowestRow(rws); pts[i]+=rowHeads(rws[ri]); rws[ri]=[c]; }
     else if(rws[ri].length>=5){ pts[i]+=rowHeads(rws[ri]); rws[ri]=[c]; }
@@ -624,12 +676,25 @@ function simTrick(rws, picks){
 function greedyPick(hand, rws, noise=2){
   let best=null,bs=Infinity;
   for(const c of hand){
-    const ri=targetRow(c,rws);
     let sc;
-    if(ri<0) sc = 100 + Math.min(...rws.map(rowHeads))*10 + c*0.05;
-    else{
-      const row=rws[ri], gap=c-row[row.length-1];
-      sc = row.length>=5 ? 100+rowHeads(row)*10+gap*0.1 : row.length*4+gap*0.6;
+    if(proRule){
+      const pl=proPlace(c,rws);
+      if(!pl){                                    // どこにも置けない＝引き取り
+        sc = 100 + Math.min(...rws.map(rowHeads))*10 + c*0.05;
+      } else if(pl.front){
+        const row=rws[pl.row];
+        sc = row.length>=5 ? 100+rowHeads(row)*10 : 18 + row.length*3 + (row[0]-c)*0.05;
+      } else {
+        const row=rws[pl.row], gap=c-row[row.length-1];
+        sc = row.length>=5 ? 100+rowHeads(row)*10+gap*0.1 : row.length*4+gap*0.6;
+      }
+    } else {
+      const ri=targetRow(c,rws);
+      if(ri<0) sc = 100 + Math.min(...rws.map(rowHeads))*10 + c*0.05;
+      else{
+        const row=rws[ri], gap=c-row[row.length-1];
+        sc = row.length>=5 ? 100+rowHeads(row)*10+gap*0.1 : row.length*4+gap*0.6;
+      }
     }
     sc += Math.random()*noise;
     if(sc<bs){bs=sc;best=c;}
@@ -666,13 +731,13 @@ function mcPick(pi){
       let loss=0;
       let picksSim=[c,...opp.map(h=>greedyPick(h,rws,3))];
       picksSim.slice(1).forEach((pc,o)=>opp[o].splice(opp[o].indexOf(pc),1));
-      loss += simTrick(rws,picksSim)[0];
+      loss += simTrick(rws,picksSim,proRule)[0];
       while(mine.length){                       // 残りトリックを最後まで
         const my=greedyPick(mine,rws,3);
         mine.splice(mine.indexOf(my),1);
         const op=opp.map(h=>greedyPick(h,rws,3));
         op.forEach((pc,o)=>opp[o].splice(opp[o].indexOf(pc),1));
-        loss += simTrick(rws,[my,...op])[0];
+        loss += simTrick(rws,[my,...op],proRule)[0];
       }
       tot.set(c, tot.get(c)+loss);
     }
@@ -721,9 +786,51 @@ async function resolve(){
   const order=P.map((_,i)=>({pi:i,c:picks[i]})).sort((a,b)=>a.c-b.c);
   for(const {pi,c} of order){
     const name = pi===0 ? `<span class="em">${P[pi].name}</span>` : P[pi].name;
+    if(proRule){
+      // プロルール：末尾/先頭を問わず、数値差が最小の場所に自動配置
+      const pl = proPlace(c, rows);
+      if(pl){
+        if(pl.front){
+          rows[pl.row].unshift(c);
+          renderRows();
+          msg(`${name} は <b>${c}</b> を列${pl.row+1}の先頭へ（前置き）`);
+          await sleep(700);
+          if(rows[pl.row].length>=6){
+            msg(`${name} の前置きで列${pl.row+1}が6枚に！ 引き取り 🐮`);
+            await sleep(800);
+            const pts=rowHeads(rows[pl.row].slice(1));
+            roundPts[pi]+=pts; rows[pl.row]=[c];
+            renderRows(); renderScores(true);
+            await sleep(700);
+          }
+        } else {
+          if(rows[pl.row].length>=5){
+            msg(`${name} の <b>${c}</b> が <b>6枚目</b>！ 列${pl.row+1}を引き取り 🐮`);
+            await sleep(900);
+            await takeRow(pi, pl.row, c, name);
+          } else {
+            rows[pl.row].push(c);
+            msg(`${name} は <b>${c}</b> を列${pl.row+1}へ`);
+            renderRows();
+            const rowEl=rowsEl.children[pl.row];
+            const cardEl=rowEl && rowEl.children[rows[pl.row].length-1];
+            if(cardEl) cardEl.classList.add("pop");
+            await sleep(700);
+          }
+        }
+      } else {
+        // 末尾にも先頭にも置けない → 引き取り（列は自動：失点最小）
+        const ri=lowestRow(rows);
+        msg(`${name} の <b>${c}</b> はどこにも置けず、列${ri+1}を引き取り 🐮`);
+        await sleep(900);
+        await takeRow(pi, ri, c, name);
+      }
+      continue;
+    }
+    // ===== 通常ルール =====
     let ri = targetRow(c, rows);
     if(ri<0){
-      // どの列にも置けない
+      // どの列にも置けない → 好きな列を引き取る（人間は選べる）
       if(pi===0){
         msg(`${name} の <b>${c}</b> はどの列にも置けません。<span class="em">引き取る列をタップ</span>`);
         ri = await new Promise(res=>{ resolvingChoice=res; renderRows(); });
@@ -827,6 +934,9 @@ chooseSetup();
 
 
 
+
+
+
 <style>
 #helpveil{position:fixed; inset:0; background:rgba(6,8,12,.9); z-index:200; display:none;
   align-items:center; justify-content:center; padding:14px;}
@@ -853,7 +963,7 @@ chooseSetup();
 </div></div>
 <script>
 (function(){
-  var HTML=`<p class="hgoal"><b>目的</b>　牛マーク（🐮）を最も少なく引き取った人の勝ち。誰かが66🐮に達したラウンドで終了です。</p><h3>カード</h3><p>1〜104の数字カード。数字ごとに牛マークの数が違います。<br><b>5の倍数＝🐮2</b> ／ <b>10の倍数＝🐮3</b> ／ <b>11の倍数＝🐮5</b> ／ <b>55＝🐮7</b> ／ それ以外＝🐮1<br>牛マークがそのまま失点です。キリのいい数字ほど危険。</p><h3>流れ</h3><p>場に4つの列があります。全員が手札から1枚を<b>同時に</b>選び、小さい数字の人から順に置いていきます。<br>置く列は選べません。<b>自分の数字より小さく、かつ最も近い数字が末尾にある列</b>に自動的に置かれます。</p><h3>引き取り</h3><p>列は5枚まで。<b>6枚目を置くことになった人が、その列の5枚をすべて引き取ります</b>（＝失点）。<br>引き取ったあと、その列は自分のカード1枚だけになります。</p><h3>どの列にも置けないとき</h3><p>自分のカードが<b>どの列の末尾よりも小さい</b>場合、好きな列を1つ選んで引き取ります。<br>手札に小さい数字を抱え込んでいると、これを強いられます。</p><h3>コツ</h3><p>列が4〜5枚まで伸びていると、次に置いた人が引き取る危険があります。<br>「安い列をわざと引き取って、場をリセットする」のも立派な戦術です。<br>全員同時出しなので、<b>他の人がどの数字を出しそうか</b>を読むゲームです。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない札から相手の手札を推定し（決定化サンプリング）、そこからラウンド終了までを何百回もシミュレーションして、失点の期待値が最小になる札を選びます。<br>すべての可能性を読み切る完全探索ではなく、シミュレーションによる<b>近似</b>です。それでも、単純に「安全そうな列」を選ぶだけのCPU（＝ふつう）と対戦させると、平均失点は 13.2 → 7.6、勝率は 25%（4人戦の基準値）→ 46.7% になります。</p>`;
+  var HTML=`<p class="hgoal"><b>目的</b>　牛マーク（🐮）を最も少なく引き取った人の勝ち。誰かが66🐮に達したラウンドで終了です。</p><h3>カード</h3><p>1〜104の数字カード。数字ごとに牛マークの数が違います。<br><b>5の倍数＝🐮2</b> ／ <b>10の倍数＝🐮3</b> ／ <b>11の倍数＝🐮5</b> ／ <b>55＝🐮7</b> ／ それ以外＝🐮1<br>牛マークがそのまま失点です。キリのいい数字ほど危険。</p><h3>流れ</h3><p>場に4つの列があります。全員が手札から1枚を<b>同時に</b>選び、小さい数字の人から順に置いていきます。<br>置く列は選べません。<b>自分の数字より小さく、かつ最も近い数字が末尾にある列</b>に自動的に置かれます。</p><h3>引き取り</h3><p>列は5枚まで。<b>6枚目を置くことになった人が、その列の5枚をすべて引き取ります</b>（＝失点）。<br>引き取ったあと、その列は自分のカード1枚だけになります。</p><h3>どの列にも置けないとき</h3><p>自分のカードが<b>どの列の末尾よりも小さい</b>場合、好きな列を1つ選んで引き取ります。<br>手札に小さい数字を抱え込んでいると、これを強いられます。</p><h3>コツ</h3><p>列が4〜5枚まで伸びていると、次に置いた人が引き取る危険があります。<br>「安い列をわざと引き取って、場をリセットする」のも立派な戦術です。<br>全員同時出しなので、<b>他の人がどの数字を出しそうか</b>を読むゲームです。</p><h3>上級（プロ）ルール</h3><p>ゲーム開始時に選べます。<br>通常は、カードは「末尾が自分より小さく、差が最も近い列」に置かれます。<br><b>プロルールでは、列の先頭（左端）にも置けるようになります</b>。カードより先頭が大きい列なら、その手前に入れられます。<br>置き場所は<b>末尾・先頭を問わず、数値差が最小の場所に自動で決まります</b>（若い数字の人から順に処理）。前置きでその列が<b>6枚目</b>になった人は、通常どおり引き取りです。<br>小さいカードにも置き場所が生まれるぶん、駆け引きが深くなる上級者向けルールです。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない札から相手の手札を推定し（決定化サンプリング）、そこからラウンド終了までを何百回もシミュレーションして、失点の期待値が最小になる札を選びます。<br>すべての可能性を読み切る完全探索ではなく、シミュレーションによる<b>近似</b>です。それでも、単純に「安全そうな列」を選ぶだけのCPU（＝ふつう）と対戦させると、平均失点は 13.2 → 7.6、勝率は 25%（4人戦の基準値）→ 46.7% になります。</p>`;
   var veil=document.getElementById("helpveil");
   document.getElementById("helpbody").innerHTML=HTML;
   function open(){ veil.classList.add("show"); }
@@ -895,6 +1005,17 @@ chooseSetup();
   h1 small{font-size:.62rem; letter-spacing:.15em; opacity:.55; margin-left:6px;}
   #goal{font-size:.7rem; opacity:.75;}
 
+  #turnorder{
+    display:flex; align-items:center; justify-content:center; gap:5px; flex-wrap:wrap;
+    font-size:.62rem; padding:4px 0 7px; opacity:.85;
+  }
+  #turnorder .tlabel{opacity:.55; margin-right:2px;}
+  #turnorder .tp{
+    padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.1);
+    border:1.5px solid transparent; font-weight:700;
+  }
+  #turnorder .tp.now{border-color:var(--gold); background:rgba(232,182,76,.18); font-weight:800;}
+  #turnorder .arw{opacity:.4;}
   /* ===== player boards ===== */
   .board{
     background:var(--panel); border-radius:12px; padding:7px 9px; margin-bottom:6px;
@@ -1033,6 +1154,7 @@ chooseSetup();
     </div>
   </header>
 
+  <div id="turnorder"></div>
   <div id="cpuboard"></div>
   <div id="nobles"></div>
   <div id="market"></div>
@@ -1207,7 +1329,17 @@ function boardHTML(p,active){
       <span style="font-size:.6rem; opacity:.6">(所持${tokCount(p)}/10)</span></div>
     ${rsv}</div>`;
 }
+function renderTurnOrder(){
+  const n=players.length;
+  const seq=[];
+  for(let k=0;k<n;k++){
+    const i=(startPlayer+k)%n;
+    seq.push(`<span class="tp${i===turnPlayer&&!over?" now":""}">${players[i].name}</span>`);
+  }
+  $("turnorder").innerHTML=`<span class="tlabel">手番順</span>`+seq.join(`<span class="arw">→</span>`)+`<span class="arw">↻</span>`;
+}
 function renderAll(){
+  renderTurnOrder();
   $("cpuboard").innerHTML=players.slice(1).map((p,i)=>boardHTML(p,turnPlayer===i+1)).join("");
   $("myboard").innerHTML=boardHTML(players[0],turnPlayer===0);
   $("nobles").innerHTML=nobles.map(n=>`<div class="noble"><div class="np">${n.pt}点</div>
@@ -1546,6 +1678,7 @@ chooseSetup();
 
 
 
+
 <style>
 #helpveil{position:fixed; inset:0; background:rgba(6,8,12,.9); z-index:200; display:none;
   align-items:center; justify-content:center; padding:14px;}
@@ -1572,7 +1705,7 @@ chooseSetup();
 </div></div>
 <script>
 (function(){
-  var HTML=`<p class="hgoal"><b>目的</b>　発展カードで得点を集め、先に15点へ。全員の手番数が揃った時点で集計し、同点ならカード枚数が少ない方の勝ちです。</p><h3>手番でできること（3つのうち1つ）</h3><p><b>① 宝石を取る</b>：違う色を3枚 ／ または同じ色を2枚（山に4枚以上残っている場合のみ）<br><b>② カードを買う</b>：コストを支払って発展カードを購入<br><b>③ カードを確保する</b>：1枚を手元にキープし、金を1枚もらう（最大3枚）</p><h3>ボーナスが雪だるま式に効く</h3><p>買った発展カードは<b>永続の割引</b>になります。白のカードを2枚持っていれば、以後どのカードも白のコストが2つ安くなります。<br>序盤は安いカードでボーナスを増やし、終盤に高得点カードを買うのが基本です。</p><h3>宝石は10枚まで</h3><p>手持ちの宝石が10枚を超えたら超過分を捨てます。取りすぎに注意。</p><h3>貴族</h3><p>上部の貴族タイルは、指定された色のボーナス数を満たすと<b>自動的に訪問し+3点</b>。色を意図的に偏らせる価値があります。</p><h3>金（ワイルド）</h3><p>確保でもらえる金は、どの色の代わりにも使えます。高額カードを買う切り札です。</p><h3>操作</h3><p>宝石をタップして選び「宝石を取る」。同じ宝石を<b>2回タップ</b>で同色2枚になります。金枠のカードは今すぐ買えるカードです。</p><h3>CPUについて</h3><p>つよいCPUは、あなたがあと少しで買えそうな高得点カードを「確保」で横取りしてきます。狙いのカードは早めに押さえましょう。</p>`;
+  var HTML=`<p class="hgoal"><b>目的</b>　発展カードで得点を集め、先に15点へ。全員の手番数が揃った時点で集計し、同点ならカード枚数が少ない方の勝ちです。</p><h3>手番でできること（3つのうち1つ）</h3><p><b>① 宝石を取る</b>：違う色を3枚 ／ または同じ色を2枚（山に4枚以上残っている場合のみ）<br><b>② カードを買う</b>：コストを支払って発展カードを購入<br><b>③ カードを確保する</b>：1枚を手元にキープし、金を1枚もらう（最大3枚）</p><h3>ボーナスが雪だるま式に効く</h3><p>買った発展カードは<b>永続の割引</b>になります。白のカードを2枚持っていれば、以後どのカードも白のコストが2つ安くなります。<br>序盤は安いカードでボーナスを増やし、終盤に高得点カードを買うのが基本です。</p><h3>宝石は10枚まで</h3><p>手持ちの宝石が10枚を超えたら超過分を捨てます。取りすぎに注意。</p><h3>貴族</h3><p>上部の貴族タイルは、指定された色のボーナス数を満たすと<b>自動的に訪問し+3点</b>。色を意図的に偏らせる価値があります。</p><h3>金（ワイルド）</h3><p>確保でもらえる金は、どの色の代わりにも使えます。高額カードを買う切り札です。</p><h3>手番順と操作</h3><p>画面上部に<b>手番順</b>が表示されます（金枠が現在の手番）。先手はランダムに決まり、以降その順で時計回りに回ります。<br>宝石をタップして選び「宝石を取る」。同じ宝石を<b>2回タップ</b>で同色2枚になります。金枠のカードは今すぐ買えるカードです。</p><h3>CPUについて</h3><p>つよいCPUは、あなたがあと少しで買えそうな高得点カードを「確保」で横取りしてきます。狙いのカードは早めに押さえましょう。</p>`;
   var veil=document.getElementById("helpveil");
   document.getElementById("helpbody").innerHTML=HTML;
   function open(){ veil.classList.add("show"); }
@@ -1635,8 +1768,9 @@ chooseSetup();
   .dchip{
     width:22px; height:28px; border-radius:4px; background:var(--cream); color:var(--ink);
     font-size:.75rem; font-weight:800; display:flex; align-items:center; justify-content:center;
-    border:1px solid rgba(0,0,0,.25); opacity:.9;
+    border:1px solid rgba(0,0,0,.25); opacity:.9; cursor:pointer;
   }
+  .dchip:active{opacity:.55;}
   .dlabel{font-size:.6rem; opacity:.55; margin-right:2px;}
 
   /* ---- center ---- */
@@ -1715,12 +1849,18 @@ chooseSetup();
   #sheet .peek .v{font-size:1.3rem; font-weight:800; color:var(--seal);}
   #sheet .peek .nm{font-weight:800;}
   #sheet .peek .ds{font-size:.62rem; margin-top:4px; opacity:.85; line-height:1.5;}
+
+  #compBtn{
+    font:inherit; font-size:.66rem; font-weight:800; padding:4px 11px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,.4); background:transparent; color:inherit; cursor:pointer;
+  }
 </style>
 </head>
 <body>
 <div id="app">
   <header>
     <h1>恋文<small>LAST LETTER</small></h1>
+    <button id="compBtn">内訳</button>
     <button id="helpBtn">遊び方</button>
     <button id="histBtn">履歴</button>
   </header>
@@ -1809,7 +1949,8 @@ const CARDS={
   7:{n:"伯爵夫人", count:1, ds:"王か王子と同時に持っていたら、この札を必ず捨てる"},
   8:{n:"姫",   count:1, ds:"この札を捨てたら（捨てさせられたら）脱落"},
 };
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let fastFwd=false;
+const sleep=ms=>new Promise(r=>setTimeout(r, fastFwd?0:ms));
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const $=id=>document.getElementById(id);
 
@@ -1821,7 +1962,7 @@ let know; // know[a][b] = aがbの手札だと知っている値 or null
 const DIFF_LABEL={easy:"やさしい",normal:"ふつう",hard:"つよい"};
 
 function chooseSetup(){
-  showSheet({title:"対戦人数を選択",body:`あなた + CPU で対戦します<br>勝利トークン目標：2人=7 / 3人=5 / 4人=4`,center:true,btns:[
+  showSheet({title:"対戦人数を選択",body:`あなた + CPU で対戦します<br>先に3点（トークン3個）を取った人の勝ち`,center:true,btns:[
     ["2人（CPU×1）",()=>chooseDiff(1)],
     ["3人（CPU×2）",()=>chooseDiff(2)],
     ["4人（CPU×3）",()=>chooseDiff(3)],
@@ -1841,13 +1982,14 @@ function newGame(nCpu,diff){
   players=[{name:"あなた",cpu:false}];
   for(let i=0;i<nCpu;i++) players.push({name:"CPU・"+CPU_NAMES[i],cpu:true});
   for(const p of players){ p.tokens=0; }
-  tokenGoal={2:7,3:5,4:4}[players.length];
+  tokenGoal=3;                       // 第2版の正規ルール：3点先取
   roundNo=0; over=false;
   startIdx=Math.floor(Math.random()*players.length);   // 初回の先手はランダム
   newRound(startIdx);
 }
 function newRound(starter){
   roundNo++;
+  fastFwd=false;
   deck=shuffle(Object.entries(CARDS).flatMap(([v,c])=>Array(c.count).fill(+v)));
   burn=deck.pop();                       // 1枚伏せて除外
   faceup=[];
@@ -1863,10 +2005,10 @@ function newRound(starter){
 /* ================= render ================= */
 function msg(h){$("msg").innerHTML=h;}
 function discHTML(p){
-  return p.disc.map(v=>`<span class="dchip" title="${CARDS[v].n}">${v}</span>`).join("");
+  return p.disc.map(v=>`<span class="dchip" data-card="${v}" title="${CARDS[v].n}">${v}</span>`).join("");
 }
 function renderAll(){
-  $("topinfo").textContent=`先取${tokenGoal}勝 ・ CPU:${DIFF_LABEL[diffLevel]} ・ ラウンド${roundNo}`;
+  $("topinfo").textContent=`3点先取 ・ CPU:${DIFF_LABEL[diffLevel]} ・ ラウンド${roundNo}`;
   $("opps").innerHTML=players.map((p,i)=>{
     if(i===0) return "";
     const intel = know[0][i]!=null && !p.out ? `<div class="intel">👁 持ち札は「${CARDS[know[0][i]].n}」</div>`:"";
@@ -1890,6 +2032,19 @@ function renderAll(){
     ${me.prot&&!me.out?`<span class="tag prot">守護</span>`:""}`;
   $("mydisc").innerHTML=`<span class="dlabel">捨札</span>`+(discHTML(me)||"<span style='opacity:.4;font-size:.6rem'>なし</span>");
   renderHand(false);
+  bindCardInfo();
+}
+/* 捨て札をタップすると、そのカードの効果を表示 */
+function bindCardInfo(){
+  document.querySelectorAll(".dchip[data-card]").forEach(el=>{
+    el.onclick=(e)=>{
+      e.stopPropagation();
+      const v=+el.dataset.card;
+      showSheet({title:`${v} ${CARDS[v].n}`, peek:v, center:true,
+        body:`<div style="opacity:.75;font-size:.72rem">捨て札は全員分ずっと見えています。残り枚数を数えると兵士の推理精度が上がります。</div>`,
+        btns:[["閉じる",null,true]]});
+    };
+  });
 }
 function renderHand(playable){
   const me=players[0];
@@ -2118,6 +2273,18 @@ async function eliminate(pi,alreadyDiscarded=false){
   forgetAbout(pi);
   renderAll();
   await sleep(600);
+  // あなたが脱落し、まだ2人以上残っているなら「結果まで飛ばす」を提案
+  if(pi===0 && !fastFwd){
+    const rest=players.filter(x=>!x.out);
+    if(rest.length>=2){
+      await new Promise(res=>{
+        showSheet({title:"脱落…",center:true,
+          body:`このラウンドは脱落です。<br>残りはCPU同士の勝負になります。`,
+          btns:[["結果まで飛ばす",()=>{ fastFwd=true; res(); }],
+                ["最後まで見る",()=>res()]]});
+      });
+    }
+  }
 }
 
 /* ================= CPU ================= */
@@ -2242,6 +2409,29 @@ function endRound(winIdx){
 }
 
 /* ================= history view ================= */
+/* カード内訳：16枚の構成と、まだ見えていない枚数 */
+$("compBtn").onclick=()=>{
+  if($("veil").classList.contains("show")) return;
+  const seenCnt={};
+  for(const v of faceup) seenCnt[v]=(seenCnt[v]||0)+1;
+  for(const p of players) for(const v of p.disc) seenCnt[v]=(seenCnt[v]||0)+1;
+  const me=players[0];
+  for(const v of me.hand) seenCnt[v]=(seenCnt[v]||0)+1;
+  const rows=[8,7,6,5,4,3,2,1].map(v=>{
+    const total=CARDS[v].count, gone=seenCnt[v]||0, left=total-gone;
+    const bar="●".repeat(left)+"○".repeat(gone);
+    return `<div style="display:flex;gap:6px;align-items:baseline">
+      <b style="min-width:5.5em">${v} ${CARDS[v].n}</b>
+      <span style="min-width:3em;opacity:.7">${total}枚</span>
+      <span style="color:var(--gold);letter-spacing:1px">${bar}</span>
+      <span style="opacity:.7;font-size:.7rem">残${left}</span></div>`;
+  }).join("");
+  showSheet({title:"カード内訳（全16枚）",
+    body:`<div style="font-size:.72rem;opacity:.75;margin-bottom:8px">
+      ●＝まだ見えていない ／ ○＝捨て札・公開除外・自分の手札で確認済み<br>
+      毎ラウンド1枚が伏せて除外されるので、残りが全部場に出るとは限りません。</div>${rows}`,
+    btns:[["閉じる",closeSheet,true]]});
+};
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
@@ -2266,6 +2456,7 @@ $("histBtn").onclick=async()=>{
 
 chooseSetup();
 <\/script>
+
 
 
 
@@ -2296,7 +2487,7 @@ chooseSetup();
 </div></div>
 <script>
 (function(){
-  var HTML=`<p class="hgoal"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークン獲得。規定数（2人=7 / 3人=5 / 4人=4）を先取した人の勝ちです。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、最も強いカードの人が勝ち。同値なら捨て札の合計で比較します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>`;
+  var HTML=`<p class="hgoal"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークンを1個獲得。<b>先に3個</b>集めた人の勝ちです（第2版の正規ルール）。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。<br>ヘッダーの<b>「内訳」</b>ボタンで、16枚の構成と残り枚数がいつでも確認できます。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、最も強いカードの人が勝ち。同値なら捨て札の合計で比較します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>`;
   var veil=document.getElementById("helpveil");
   document.getElementById("helpbody").innerHTML=HTML;
   function open(){ veil.classList.add("show"); }
@@ -2339,6 +2530,29 @@ chooseSetup();
     border:1.5px solid rgba(255,255,255,.4); background:transparent; color:var(--paper); cursor:pointer;
   }
   #topinfo{font-size:.68rem; opacity:.75; text-align:center; padding-bottom:6px;}
+  /* 席順の円 */
+  #seats{position:relative; width:186px; height:186px; margin:2px auto 10px;}
+  #seats .ring{
+    position:absolute; inset:26px; border:1.5px dashed rgba(255,255,255,.22); border-radius:50%;
+  }
+  #seats .arrow{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:.58rem; opacity:.6; flex-direction:column; line-height:1.5; pointer-events:none;
+  }
+  #seats .arrow b{font-size:.95rem;}
+  .seat{
+    position:absolute; width:56px; margin-left:-28px; text-align:center;
+    font-size:.58rem; font-weight:800; line-height:1.25;
+  }
+  .seat .dot{
+    width:26px; height:26px; border-radius:50%; margin:0 auto 2px;
+    display:flex; align-items:center; justify-content:center; font-size:.62rem;
+    background:rgba(255,255,255,.14); border:1.5px solid rgba(255,255,255,.3);
+  }
+  .seat.me .dot{background:var(--accent); border-color:#fff;}
+  .seat.now .dot{border-color:var(--gold); box-shadow:0 0 0 3px rgba(217,164,65,.35);}
+  .seat .nm{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .seat .rel{font-size:.5rem; opacity:.6;}
 
   .opp{
     background:rgba(255,255,255,.06); border-radius:11px; padding:6px 9px; margin-bottom:5px;
@@ -2355,7 +2569,9 @@ chooseSetup();
   .pchip{
     font-size:.6rem; font-weight:800; padding:2px 6px; border-radius:4px;
     background:var(--paper); color:var(--ink); border:1px solid rgba(0,0,0,.25); opacity:.92;
+    cursor:pointer;
   }
+  .pchip:active{opacity:.6;}
   .pchip.hannin{background:var(--accent); color:#fff;}
   .plabel{font-size:.58rem; opacity:.5;}
 
@@ -2420,6 +2636,7 @@ chooseSetup();
     <button id="histBtn">履歴</button>
   </header>
   <div id="topinfo"></div>
+  <div id="seats"><div class="ring"></div><div class="arrow"><b>↻</b>手番は<br>この向き</div></div>
   <div id="opps"></div>
   <div id="msg"></div>
   <div id="myarea">
@@ -2602,8 +2819,28 @@ const humanIdx=()=>players.findIndex(p=>!p.cpu);
 
 /* ================= render ================= */
 function msg(h){$("msg").innerHTML=h;}
-function chipHTML(t){return `<span class="pchip ${t}">${T[t].n}</span>`;}
+function chipHTML(t){return `<span class="pchip ${t}" data-card="${t}">${T[t].n}</span>`;}
+function renderSeats(){
+  const n=N(), RAD=76, C=93;
+  let html=`<div class="ring"></div><div class="arrow"><b>↻</b>手番は<br>この向き<br><span style="font-size:.52rem">（左隣へ）</span></div>`;
+  for(let i=0;i<n;i++){
+    // 自分を下（真下）に置き、手番の進む向き（＝左隣）が反時計回りになるよう配置
+    const off=(i-humanIdx()+n)%n;
+    const ang=Math.PI/2 + off*(2*Math.PI/n);      // 下から反時計回り
+    const x=C+RAD*Math.cos(ang), y=C+RAD*Math.sin(ang);
+    const p=players[i];
+    const rel = i===humanIdx() ? ""
+      : (i===L(humanIdx()) ? "左隣（次）" : (i===R(humanIdx()) ? "右隣（前）" : ""));
+    html+=`<div class="seat${i===humanIdx()?" me":""}${i===turnIdx&&!over?" now":""}"
+      style="left:${x}px; top:${y-20}px">
+      <div class="dot">${p.cpu?"🤖":"🧑"}</div>
+      <div class="nm">${p.name.replace("CPU・","")}</div>
+      <div class="rel">${rel}</div></div>`;
+  }
+  $("seats").innerHTML=html;
+}
 function renderAll(){
+  renderSeats();
   $("topinfo").textContent=`${N()}人対戦 ・ CPU:${DIFF_LABEL[diffLevel]} ・ 手番${turnsTaken}${turnsTaken<N()?"（一巡目：探偵は使用不可）":""}`;
   $("opps").innerHTML=players.map((p,i)=>{
     if(!p.cpu) return "";
@@ -2620,6 +2857,18 @@ function renderAll(){
   $("myplayed").innerHTML=`<span class="plabel">出した:</span>`+(me.played.map(chipHTML).join("")||"<span class='plabel'>なし</span>");
   $("intel").innerHTML=intelLog.map(s=>"・"+s).join("<br>");
   renderHand(false);
+  bindCardInfo();
+}
+/* 場に出たカードをタップすると効果を表示（いつでも見られる） */
+function bindCardInfo(){
+  document.querySelectorAll(".pchip[data-card]").forEach(el=>{
+    el.onclick=(e)=>{
+      e.stopPropagation();
+      const t=el.dataset.card;
+      showSheet({title:T[t].n, body:`<div style="text-align:left;line-height:1.9">${T[t].ds}</div>`,
+        btns:[["閉じる",null,"ghost"]]});
+    };
+  });
 }
 function renderHand(playable){
   const me=players[humanIdx()];
@@ -3090,6 +3339,7 @@ chooseSetup();
 
 
 
+
 <style>
 #helpveil{position:fixed; inset:0; background:rgba(6,8,12,.9); z-index:200; display:none;
   align-items:center; justify-content:center; padding:14px;}
@@ -3116,7 +3366,7 @@ chooseSetup();
 </div></div>
 <script>
 (function(){
-  var HTML=`<p class="hgoal"><b>目的</b>　犯人カードの持ち主を暴けば探偵側の勝ち。犯人が最後の1枚として犯人カードを出せたら犯人の勝ちです。</p><h3>まず知っておくこと</h3><p><b>犯人は固定されていません。</b>犯人カードは取り引き・うわさ・情報操作で人から人へ移ります。<br>いま持っている人が犯人。さっきまで犯人だった人が今は無関係、ということも普通に起こります。</p><h3>勝ち方は3つ</h3><p><b>① 探偵</b>で犯人カードの持ち主を指名して当てる<br><b>② いぬ</b>で相手の手札から犯人カードを引き当てる<br><b>③ 犯人カードを、手札が最後の1枚になったときに出す</b>（逃げ切り）</p><h3>重要：アリバイ</h3><p>犯人カードを持っていても、<b>アリバイを一緒に持っていれば探偵に指名されても「いいえ」と言えます</b>。<br>逆に、アリバイを持たない犯人は探偵に怯えることになります。</p><h3>主なカード</h3><p><b>探偵</b>：1人を指名（最初の一巡では使用不可） ／ <b>いぬ</b>：1人の手札からランダムに1枚<br><b>目撃者</b>：1人の手札を全部見る ／ <b>少年</b>：いま犯人カードを持つ人を自分だけが知る<br><b>取り引き</b>：1人と1枚ずつ裏向きで交換 ／ <b>うわさ</b>：全員が右隣からランダムに1枚<br><b>情報操作</b>：全員が1枚選んで左隣へ ／ <b>たくらみ</b>：以後、犯人と運命共同体<br><b>アリバイ</b>：持つ限り探偵を否認できる ／ <b>一般人</b>：何も起こらない</p><h3>たくらみの罠</h3><p>たくらみを出した人は犯人の味方です。<b>たくらみ済の人が探偵で犯人を当てても、道連れで負けます</b>。</p><h3>画面の見方</h3><p>あなたが得た情報（見た手札、少年情報、受け取った札、犯人カードが自分に来た警告）は、手札の上のメモ欄に残ります。</p><h3>CPUについて</h3><p>つよいCPUは、犯人カードを渡した相手を記憶し、うわさや取り引きで動くたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>`;
+  var HTML=`<p class="hgoal"><b>目的</b>　犯人カードの持ち主を暴けば探偵側の勝ち。犯人が最後の1枚として犯人カードを出せたら犯人の勝ちです。</p><h3>まず知っておくこと</h3><p><b>犯人は固定されていません。</b>犯人カードは取り引き・うわさ・情報操作で人から人へ移ります。<br>いま持っている人が犯人。さっきまで犯人だった人が今は無関係、ということも普通に起こります。</p><h3>勝ち方は3つ</h3><p><b>① 探偵</b>で犯人カードの持ち主を指名して当てる<br><b>② いぬ</b>で相手の手札から犯人カードを引き当てる<br><b>③ 犯人カードを、手札が最後の1枚になったときに出す</b>（逃げ切り）</p><h3>重要：アリバイ</h3><p>犯人カードを持っていても、<b>アリバイを一緒に持っていれば探偵に指名されても「いいえ」と言えます</b>。<br>逆に、アリバイを持たない犯人は探偵に怯えることになります。</p><h3>主なカード</h3><p><b>探偵</b>：1人を指名（最初の一巡では使用不可） ／ <b>いぬ</b>：1人の手札からランダムに1枚<br><b>目撃者</b>：1人の手札を全部見る ／ <b>少年</b>：いま犯人カードを持つ人を自分だけが知る<br><b>取り引き</b>：1人と1枚ずつ裏向きで交換 ／ <b>うわさ</b>：全員が右隣からランダムに1枚<br><b>情報操作</b>：全員が1枚選んで左隣へ ／ <b>たくらみ</b>：以後、犯人と運命共同体<br><b>アリバイ</b>：持つ限り探偵を否認できる ／ <b>一般人</b>：何も起こらない</p><h3>たくらみの罠</h3><p>たくらみを出した人は犯人の味方です。<b>たくらみ済の人が探偵で犯人を当てても、道連れで負けます</b>。</p><h3>画面の見方</h3><p>上部の<b>円</b>が席順です。あなたは常に下、手番は<b>時計回り</b>に進みます。<br>「うわさ」は<b>右隣（前の手番の人）</b>から引き、「情報操作」は<b>左隣（次の手番の人）</b>へ渡します。<br>あなたが得た情報（見た手札、少年情報、受け取った札、犯人カードが自分に来た警告）は、手札の上のメモ欄に残ります。</p><h3>CPUについて</h3><p>つよいCPUは、犯人カードを渡した相手を記憶し、うわさや取り引きで動くたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>`;
   var veil=document.getElementById("helpveil");
   document.getElementById("helpbody").innerHTML=HTML;
   function open(){ veil.classList.add("show"); }
@@ -3252,6 +3502,11 @@ chooseSetup();
     font-weight:800; font-size:.7rem;
   }
   .reveal .rc.mine{outline:2px solid var(--gold);}
+
+  #compBtn{
+    font:inherit; font-size:.66rem; font-weight:800; padding:4px 11px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,.4); background:transparent; color:inherit; cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -3259,6 +3514,7 @@ chooseSetup();
   <header>
     <h1>ジャッカル<small>JACKAL</small></h1>
     <div style="display:flex; gap:6px">
+      <button id="compBtn">内訳</button>
       <button id="helpBtn">遊び方</button>
       <button id="histBtn">履歴</button>
     </div>
@@ -3359,7 +3615,8 @@ function buildDeck(){
   return d;
 }
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let fastFwd=false;
+const sleep=ms=>new Promise(r=>setTimeout(r, fastFwd?0:ms));
 const $=id=>document.getElementById(id);
 const key=c=> c.t==="n" ? "n"+c.v : "s"+c.s;
 const cardName=c=> c.t==="n" ? String(c.v) : LABEL[c.s];
@@ -3645,6 +3902,38 @@ function showSheet({title,body,btns}){
 function closeSheet(){ $("veil").classList.remove("show"); }
 
 /* ================= 履歴表示 ================= */
+/* カード内訳：36枚の構成と、捨て札に出た枚数 */
+$("compBtn").onclick=()=>{
+  if($("veil").classList.contains("show")) return;
+  const used={};
+  for(const c of discard){ const k=key(c); used[k]=(used[k]||0)+1; }
+  const full=buildDeck();
+  const cnt={};
+  for(const c of full){ const k=key(c); cnt[k]=(cnt[k]||0)+1; }
+  const order=[20,15,10,5,4,3,2,1,0,-5,-10];
+  const numRows=order.map(v=>{
+    const k="n"+v, total=cnt[k]||0, gone=used[k]||0;
+    if(!total) return "";
+    return `<div style="display:flex;gap:6px;align-items:baseline">
+      <b style="min-width:3em;text-align:right">${v}</b>
+      <span style="min-width:3.5em;opacity:.7">${total}枚</span>
+      <span style="color:var(--gold);letter-spacing:1px">${"●".repeat(total-gone)}${"○".repeat(gone)}</span></div>`;
+  }).join("");
+  const spRows=[SP.X2,SP.MAX0,SP.NIGHT,SP.DRAW].map(sp=>{
+    const k="s"+sp, gone=used[k]||0;
+    return `<div style="display:flex;gap:6px;align-items:baseline">
+      <b style="min-width:5em">${LABEL[sp]}</b>
+      <span style="min-width:6em;opacity:.7;font-size:.7rem">${SUB[sp]}</span>
+      <span style="color:var(--gold)">${gone?"○":"●"}</span></div>`;
+  }).join("");
+  showSheet({title:"カード内訳（全36枚）",
+    body:`<div style="text-align:left">
+      <div style="font-size:.72rem;opacity:.75;margin-bottom:8px">●＝まだ出ていない ／ ○＝捨て札に出た</div>
+      ${numRows}
+      <div style="margin:10px 0 4px;font-weight:800;color:var(--gold)">特殊カード（各1枚）</div>
+      ${spRows}</div>`,
+    btns:[["閉じる",closeSheet,true]]});
+};
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
@@ -3665,6 +3954,7 @@ $("histBtn").onclick=async()=>{
 
 chooseSetup();
 <\/script>
+
 
 
 
@@ -3696,7 +3986,7 @@ chooseSetup();
 </div></div>
 <script>
 (function(){
-  var HTML=`<p class="hgoal"><b>目的</b>　自分のカードだけが見えない状態で「全員の合計以下」の数を宣言し続けるチキンレース。ライフを3回失うと脱落、最後まで残れば勝ちです。</p><h3>自分のカードだけ見えない</h3><p>全員が1枚ずつカードを引き、<b>自分だけ見えないように額に掲げます</b>。<br>他の人のカードは全部見えるので、<b>見えている合計＋自分の未知の1枚</b>を推理することになります。</p><h3>流れ</h3><p>手番の人は、全員の合計以下だと思う数を宣言します。次の人は<b>それより大きい数を宣言</b>するか、「ジャッカル！」と疑うかを選びます。</p><h3>「ジャッカル！」で疑う</h3><p>直前の宣言が合計を<b>超えている</b>と思ったら宣言します。全員がカードを公開して答え合わせ。<br>宣言 > 合計 なら<b>宣言した人</b>がライフを失い、宣言 ≦ 合計 なら<b>疑った人</b>がライフを失います。</p><h3>カード構成（36枚）</h3><p>1〜5が各4枚 ／ 0・10が各3枚 ／ -5・15が各2枚 ／ -10・20が各1枚<br>特殊カードが各1枚：<b>×2</b>（合計を2倍） ／ <b>MAX→0</b>（最大の数字を0にする） ／ <b>夜0</b>（0として扱い、次から山札を作り直す） ／ <b>?</b>（公開時に山札から1枚追加）</p><h3>コツ</h3><p>使ったカードは捨て札に残り、画面下でいつでも見られます。<b>20や-10が既に出ているか</b>を数えれば、自分のカードの見当がつきます。<br>また、みんなが妙に高い数を言うなら、あなたが大きい数字を持っている可能性が高いです。</p><h3>CPUについて</h3><p>つよいCPUは捨て札を数え、自分のカードの確率分布から合計の期待値を計算します。時々つり上げのブラフも打ってきます。</p>`;
+  var HTML=`<p class="hgoal"><b>目的</b>　自分のカードだけが見えない状態で「全員の合計以下」の数を宣言し続けるチキンレース。ライフを3回失うと脱落、最後まで残れば勝ちです。</p><h3>自分のカードだけ見えない</h3><p>全員が1枚ずつカードを引き、<b>自分だけ見えないように額に掲げます</b>。<br>他の人のカードは全部見えるので、<b>見えている合計＋自分の未知の1枚</b>を推理することになります。</p><h3>流れ</h3><p>手番の人は、全員の合計以下だと思う数を宣言します。次の人は<b>それより大きい数を宣言</b>するか、「ジャッカル！」と疑うかを選びます。</p><h3>「ジャッカル！」で疑う</h3><p>直前の宣言が合計を<b>超えている</b>と思ったら宣言します。全員がカードを公開して答え合わせ。<br>宣言 > 合計 なら<b>宣言した人</b>がライフを失い、宣言 ≦ 合計 なら<b>疑った人</b>がライフを失います。</p><h3>カード構成（36枚）</h3><p>1〜5が各4枚 ／ 0・10が各3枚 ／ -5・15が各2枚 ／ -10・20が各1枚<br>特殊カードが各1枚：<b>×2</b>（合計を2倍） ／ <b>MAX→0</b>（最大の数字を0にする） ／ <b>夜0</b>（0として扱い、次から山札を作り直す） ／ <b>?</b>（公開時に山札から1枚追加）</p><h3>コツ</h3><p>使ったカードは捨て札に残り、画面下でいつでも見られます。<b>20や-10が既に出ているか</b>を数えれば、自分のカードの見当がつきます。<br>ヘッダーの<b>「内訳」</b>ボタンで、36枚の構成と、どれが既に出たかを一覧できます。<br>また、みんなが妙に高い数を言うなら、あなたが大きい数字を持っている可能性が高いです。</p><h3>CPUについて</h3><p>つよいCPUは捨て札を数え、自分のカードの確率分布から合計の期待値を計算します。時々つり上げのブラフも打ってきます。</p>`;
   var veil=document.getElementById("helpveil");
   document.getElementById("helpbody").innerHTML=HTML;
   function open(){ veil.classList.add("show"); }
@@ -3840,6 +4130,11 @@ chooseSetup();
   }
   .grid8 button .ic{display:block; font-size:1.1rem;}
   .grid8 button.sameas{border-color:var(--gold);}
+
+  #compBtn{
+    font:inherit; font-size:.66rem; font-weight:800; padding:4px 11px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,.4); background:transparent; color:inherit; cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -3847,6 +4142,7 @@ chooseSetup();
   <header>
     <h1>むしポーカー<small>BUG BLUFF</small></h1>
     <div style="display:flex; gap:6px">
+      <button id="compBtn">内訳</button>
       <button id="helpBtn">遊び方</button>
       <button id="histBtn">履歴</button>
     </div>
@@ -4041,6 +4337,7 @@ function setActs(list){
 /* ================= 手番開始（親＝カードを出す） ================= */
 async function startTurn(){
   if(over) return;
+  busy=false;                          // 新しい手番：入力ロック解除
   const p=players[turnIdx];
   pass=null;
   render();
@@ -4097,6 +4394,7 @@ function canForward(){
   return players.some((p,i)=> !pass.seen.includes(i) && i!==pass.to);
 }
 async function receive(){
+  if(!pass || over) return;            // 解決済みのやり取りに対する遅延呼び出しを無視
   const to=pass.to, p=players[to];
   render();
   if(p.cpu){
@@ -4158,6 +4456,7 @@ function humanForwardClaim(to){
 
 /* ================= 判定 ================= */
 async function resolve(guesser, saysTrue){
+  if(!pass || over) return;
   const truth = pass.card===pass.claim;
   const correct = (saysTrue===truth);
   const taker = correct ? pass.from : guesser;      // 当てたら出し手が引き取る
@@ -4242,6 +4541,7 @@ function cpuGive(pi){
 }
 function cpuReceive(pi){
   const p=players[pi], hard=diffLevel==="hard", easy=diffLevel==="easy";
+  if(!pass) return {forward:false, guess:true};
   const claim=pass.claim, actual=pass.card;
   const rnd=a=>a[Math.floor(Math.random()*a.length)];
 
@@ -4332,6 +4632,31 @@ function showSheet({title,body,btns,peek}){
 function closeSheet(){ $("veil").classList.remove("show"); }
 
 /* ================= 履歴表示 ================= */
+/* カード内訳：各8枚。場札＋自分の手札から「まだ見えていない枚数」を出す */
+$("compBtn").onclick=()=>{
+  if($("veil").classList.contains("show")) return;
+  const me=players[meIdx()];
+  const rows=KIND.map(x=>{
+    let onBoard=0;
+    for(const p of players) onBoard += pileCount(p,x.k);
+    const inHand=me.hand.filter(k=>k===x.k).length;
+    const unknown=8-onBoard-inHand;
+    const warn = unknown<=0 ? ' style="color:var(--lie);font-weight:800"' : "";
+    return `<div style="display:flex;gap:6px;align-items:baseline;padding:2px 0">
+      <span style="min-width:1.6em">${x.i}</span>
+      <b style="min-width:4.5em">${x.n}</b>
+      <span style="min-width:4.5em;opacity:.7;font-size:.7rem">場に${onBoard}</span>
+      <span style="min-width:5em;opacity:.7;font-size:.7rem">手札に${inHand}</span>
+      <span${warn}>残り${unknown}</span></div>`;
+  }).join("");
+  showSheet({title:"カード内訳（8種×8枚＝64枚）",
+    body:`<div style="text-align:left">
+      <div style="font-size:.72rem;opacity:.75;margin-bottom:8px">
+        「残り」＝場にも自分の手札にもない枚数。<br>
+        <b style="color:var(--lie)">残り0</b> の生き物を宣言されたら、それは<b>確実に嘘</b>です。</div>
+      ${rows}</div>`,
+    btns:[["閉じる",closeSheet,"g"]]});
+};
 $("histBtn").onclick=async()=>{
   if($("veil").classList.contains("show")) return;
   const h=await loadHistory();
@@ -4352,6 +4677,7 @@ $("histBtn").onclick=async()=>{
 
 chooseSetup();
 <\/script>
+
 
 
 
@@ -4382,7 +4708,1303 @@ chooseSetup();
 </div></div>
 <script>
 (function(){
-  var HTML=`<p class="hgoal"><b>目的</b>　「一人負け」を決めるゲーム。同じ生き物を4枚（2人戦は5枚）引き取るか、8種類すべて引き取るか、手札が尽きて出せなくなった人の負けです。</p><h3>流れ</h3><p>手番の人は手札から1枚を裏向きで誰かに渡し、<b>「これは○○です」と宣言</b>します。<b>本当でも嘘でもOK</b>。</p><h3>受け取った人の選択肢</h3><p><b>①「本当だ」または「嘘だ」と答える</b> → カードを公開。<br>　当てられたら<b>渡した人</b>が引き取り、外したら<b>自分</b>が引き取ります。<br><b>② 覗いて回す</b> → 自分だけカードを確認し、まだ見ていない人に回します。宣言は変えてもOK。<br>　ただし<b>全員が見てしまったら、最後の人は必ず答えなければなりません</b>。</p><h3>引き取ったら</h3><p>そのカードは表向きで自分の前に置かれ、全員に見えます。引き取った人が次の親になります。</p><h3>数えることが最大のコツ</h3><p>各生き物は8枚ずつしかありません。<b>場に見えている枚数＋自分の手札の枚数</b>を数えて、残りが0なら、その宣言は<b>確実に嘘</b>です。</p><h3>押し付け合いの読み合い</h3><p>相手が3枚集めている生き物を、<b>本当のことを言って</b>渡すのが強力です。相手は怖くて「嘘だ」と言いたくなり、外して引き取ってしまいます。</p><h3>CPUについて</h3><p>つよいCPUは残り枚数を数えて確実な嘘を見抜き、あなたが3枚集めている生き物を狙って押し付けてきます。</p>`;
+  var HTML=`<p class="hgoal"><b>目的</b>　「一人負け」を決めるゲーム。同じ生き物を4枚（2人戦は5枚）引き取るか、8種類すべて引き取るか、手札が尽きて出せなくなった人の負けです。</p><h3>流れ</h3><p>手番の人は手札から1枚を裏向きで誰かに渡し、<b>「これは○○です」と宣言</b>します。<b>本当でも嘘でもOK</b>。</p><h3>受け取った人の選択肢</h3><p><b>①「本当だ」または「嘘だ」と答える</b> → カードを公開。<br>　当てられたら<b>渡した人</b>が引き取り、外したら<b>自分</b>が引き取ります。<br><b>② 覗いて回す</b> → 自分だけカードを確認し、まだ見ていない人に回します。宣言は変えてもOK。<br>　ただし<b>全員が見てしまったら、最後の人は必ず答えなければなりません</b>。</p><h3>引き取ったら</h3><p>そのカードは表向きで自分の前に置かれ、全員に見えます。引き取った人が次の親になります。</p><h3>数えることが最大のコツ</h3><p>各生き物は8枚ずつしかありません。<b>場に見えている枚数＋自分の手札の枚数</b>を数えて、残りが0なら、その宣言は<b>確実に嘘</b>です。<br>ヘッダーの<b>「内訳」</b>ボタンを押すと、この計算を自動でやってくれます。</p><h3>押し付け合いの読み合い</h3><p>相手が3枚集めている生き物を、<b>本当のことを言って</b>渡すのが強力です。相手は怖くて「嘘だ」と言いたくなり、外して引き取ってしまいます。</p><h3>CPUについて</h3><p>つよいCPUは残り枚数を数えて確実な嘘を見抜き、あなたが3枚集めている生き物を狙って押し付けてきます。</p>`;
+  var veil=document.getElementById("helpveil");
+  document.getElementById("helpbody").innerHTML=HTML;
+  function open(){ veil.classList.add("show"); }
+  function close(){ veil.classList.remove("show"); }
+  document.getElementById("helpBtn").onclick=open;
+  document.getElementById("helpclose").onclick=close;
+  veil.onclick=function(e){ if(e.target===veil) close(); };
+  window.openHelp=open;
+})();
+<\/script>
+
+</body>
+</html>
+</script>
+<script type="text/plain" id="src-kotori"><!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ことりならべ — CPU対戦（非公式）</title>
+<style>
+  :root{
+    --bg1:#20344a; --bg2:#0f1a26;
+    --card:#f5eede; --ink:#33291c;
+    --gold:#e0b24a; --sky:#5aa6d6; --leaf:#5fa663; --pass:#8a93a0;
+    --c1:#e8896a; --c2:#e0b24a; --c3:#8bbf5a; --c4:#5aa6d6; --c5:#7b78c9; --c6:#d06fa8; --c7:#c94f4f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
+    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 72%);
+    color:#f0ecdf; min-height:100vh; user-select:none;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  #app{width:100%; max-width:560px; padding:8px 10px 24px;}
+  header{display:flex; justify-content:space-between; align-items:center; padding:4px 2px 6px; gap:6px;}
+  h1{font-size:1.12rem; letter-spacing:.16em; font-weight:800; white-space:nowrap;}
+  h1 small{font-size:.55rem; letter-spacing:.08em; opacity:.5; margin-left:5px;}
+  #helpBtn,#histBtn{
+    font:inherit; font-size:.66rem; font-weight:800; padding:4px 11px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,.4); background:transparent; color:#f0ecdf; cursor:pointer;
+  }
+  #topinfo{font-size:.66rem; opacity:.75; text-align:center; padding-bottom:8px;}
+
+  /* ---- 他プレイヤー ---- */
+  #others{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:8px;}
+  .who{
+    background:rgba(0,0,0,.26); border-radius:11px; padding:6px 10px;
+    border:1.5px solid transparent; text-align:center; min-width:88px;
+  }
+  .who.active{border-color:var(--gold);}
+  .who.done{opacity:.5;}
+  .who .nm{font-size:.72rem; font-weight:800; white-space:nowrap;}
+  .who .li{font-size:.7rem; letter-spacing:1px;}
+  .who .cnt{font-size:.62rem; opacity:.75; margin-top:2px;}
+  .who .st{font-size:.58rem; font-weight:800; margin-top:1px;}
+  .who .st.up{color:var(--gold);} .who .st.ps{color:var(--pass);}
+
+  /* ---- 場 ---- */
+  #field{
+    background:rgba(0,0,0,.28); border-radius:14px; padding:14px 10px; margin-bottom:6px;
+    min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  }
+  #fieldcards{display:flex; gap:5px; min-height:76px; align-items:center; justify-content:center; flex-wrap:wrap;}
+  #fieldinfo{font-size:.66rem; opacity:.7;}
+  .card{
+    width:52px; height:72px; border-radius:8px; background:var(--card); color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 3px 6px rgba(0,0,0,.4); border:2px solid rgba(0,0,0,.2); position:relative;
+    font-weight:800;
+  }
+  .card .num{font-size:1.5rem; line-height:1;}
+  .card .bird{font-size:.85rem; margin-top:2px;}
+  .card.n1{border-top:5px solid var(--c1);} .card.n2{border-top:5px solid var(--c2);}
+  .card.n3{border-top:5px solid var(--c3);} .card.n4{border-top:5px solid var(--c4);}
+  .card.n5{border-top:5px solid var(--c5);} .card.n6{border-top:5px solid var(--c6);}
+  .card.n7{border-top:5px solid var(--c7);}
+  .card.small{width:34px; height:48px;}
+  .card.small .num{font-size:1rem;} .card.small .bird{font-size:.6rem;}
+  .card.mini{width:20px; height:28px; border-radius:4px;}
+  .card.mini .num{font-size:.7rem;} .card.mini .bird{display:none;}
+
+  #msg{text-align:center; font-size:.82rem; font-weight:700; min-height:2.4em; padding:4px 10px; line-height:1.5;}
+  #msg .em{color:var(--gold);} #msg .win{color:var(--leaf);}
+
+  /* ---- 自分 ---- */
+  #myarea{
+    background:linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.42));
+    border-top:3px solid var(--sky); border-radius:14px 14px 0 0; padding:9px 10px 12px;
+  }
+  #myhead{display:flex; align-items:center; gap:8px; font-size:.74rem; font-weight:800; justify-content:center; margin-bottom:2px;}
+  #myhint{text-align:center; font-size:.6rem; opacity:.6; margin-bottom:6px;}
+  #hand{display:flex; gap:3px; justify-content:center; flex-wrap:wrap;}
+  #hand .card{width:42px; height:60px; cursor:pointer; transition:transform .1s;}
+  #hand .card .num{font-size:1.2rem;}
+  #hand .card.sel{transform:translateY(-10px); box-shadow:0 0 0 3px var(--gold), 0 6px 10px rgba(0,0,0,.4);}
+  #hand .card.selectable{outline:1.5px dashed rgba(224,178,74,.5);}
+  #hand .card.dim{opacity:.85;}
+  #controls{display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap;}
+  button.act{
+    font:inherit; font-weight:800; letter-spacing:.05em; padding:9px 20px; border-radius:999px;
+    border:none; cursor:pointer; background:var(--gold); color:#3b2d0c; box-shadow:0 3px 0 #a8842b;
+  }
+  button.act.pass{background:var(--pass); color:#fff; box-shadow:0 3px 0 #626b78;}
+  button.act.g{background:transparent; color:#f0ecdf; border:1.5px solid rgba(255,255,255,.4); box-shadow:none;}
+  button.act:disabled{opacity:.35; box-shadow:none; cursor:default;}
+
+  .ins-row{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:2px; padding:6px 0;}
+  .ins-card{display:inline-flex;}
+  .ins-slot{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:48px; border-radius:6px; cursor:pointer;
+    background:rgba(255,255,255,.08); border:1.5px dashed rgba(255,255,255,.3);
+    color:rgba(255,255,255,.5); font-weight:800; font-size:.9rem; flex:0 0 auto;
+  }
+  .ins-slot:active{background:rgba(255,255,255,.2);}
+  .ins-slot.adj{
+    border-color:var(--gold); border-style:solid; color:var(--gold);
+    background:rgba(224,178,74,.18);
+  }
+  #veil{position:fixed; inset:0; background:rgba(6,12,20,.86); z-index:60;
+    display:none; align-items:center; justify-content:center; padding:16px;}
+  #veil.show{display:flex;}
+  #sheet{background:#1c2c3e; border:2px solid #3f5a72; border-radius:16px;
+    padding:20px; max-width:400px; width:100%; text-align:center;}
+  #sheet{border-color:#3f5a72;}
+  #sheet h2{font-size:1rem; margin-bottom:10px; letter-spacing:.05em;}
+  #sheet .body{font-size:.8rem; line-height:1.8; margin-bottom:14px; max-height:52vh; overflow-y:auto;}
+  #sheet .btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>ことりならべ<small>非公式・CPU対戦</small></h1>
+    <div style="display:flex; gap:6px">
+      <button id="helpBtn">遊び方</button>
+      <button id="histBtn">履歴</button>
+    </div>
+  </header>
+  <div id="topinfo"></div>
+  <div id="others"></div>
+  <div id="field">
+    <div id="fieldcards"></div>
+    <div id="fieldinfo"></div>
+  </div>
+  <div id="msg"></div>
+  <div id="myarea">
+    <div id="myhead"></div>
+    <div id="myhint">手札は並べ替えできません。隣り合う同じ数字はまとめて出せます</div>
+    <div id="hand"></div>
+    <div id="controls"></div>
+  </div>
+</div>
+
+<div id="veil"><div id="sheet">
+  <h2 id="stitle"></h2>
+  <div class="body" id="sbody"></div>
+  <div class="btns" id="sbtns"></div>
+</div></div>
+
+<!-- Firebase（GitHub Pagesで履歴を共有する場合に設定。未設定でも動きます） -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"><\/script>
+<script>
+"use strict";
+/* ================= 履歴 ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDML257ZXglBfRZ6zKkS2l4rIZBpeyNuTo",
+  authDomain: "bodogeshu.firebaseapp.com",
+  databaseURL: "https://bodogeshu-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bodogeshu",
+};
+const HKEY="kotori-history";
+const FPATH="kotori/history";
+let fdb=null;
+try{
+  if(typeof firebase!=="undefined" && firebaseConfig.databaseURL){
+    firebase.initializeApp(firebaseConfig); fdb=firebase.database();
+  }
+}catch(e){}
+const STORE=(()=>{ try{
+  if(window.storage) return window.storage;
+  if(window.parent && window.parent!==window && window.parent.storage) return window.parent.storage;
+}catch(e){} return null; })();
+const storageMode=()=> fdb ? "Firebase（全端末で共有）" : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+async function loadHistory(){
+  try{
+    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
+    if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
+    return JSON.parse(localStorage.getItem(HKEY)||"[]");
+  }catch(e){ return []; }
+}
+async function saveRecord(rec){
+  try{
+    const h=await loadHistory(); h.push(rec);
+    if(h.length>100) h.splice(0,h.length-100);
+    if(fdb){ await fdb.ref(FPATH).set(h); return; }
+    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
+    localStorage.setItem(HKEY, JSON.stringify(h));
+  }catch(e){}
+}
+async function clearHistory(){
+  try{
+    if(fdb){ await fdb.ref(FPATH).remove(); }
+    else if(STORE){ await STORE.delete(HKEY,false); }
+    else localStorage.removeItem(HKEY);
+  }catch(e){}
+}
+
+/* ================= カード ================= */
+const BIRD={1:"🐤",2:"🐥",3:"🐦",4:"🕊️",5:"🦜",6:"🦉",7:"🦚"};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+let fastFwd=false;                  // 自分の退場後、結果まで飛ばす
+const sleep=ms=>new Promise(r=>setTimeout(r, fastFwd?0:ms));
+const $=id=>document.getElementById(id);
+
+/* 役の強さ比較：枚数が多いほど強い、同枚数なら数字が大きいほど強い */
+function stronger(a,b){ // a が b より強いか（a,b = {num,count}）
+  if(!b) return true;
+  if(a.count!==b.count) return a.count>b.count;
+  return a.num>b.num;
+}
+
+/* ================= 状態 ================= */
+const CPU_NAMES=["ヒバリ","ツバメ","カワセミ","フクロウ","セキレイ"];
+const DIFF_LABEL={easy:"やさしい",normal:"ふつう",hard:"つよい"};
+let players, deck, field, fieldOwner, turnIdx, passers, finishOrder, diffLevel, over, busy;
+let selStart=-1, selLen=0;
+let gen=0;                         // ラウンド世代（古い非同期処理の無効化用）
+const N=()=>players.length;
+const active=()=>players.map((p,i)=>p.done?null:i).filter(i=>i!=null);
+
+function chooseSetup(){
+  showSheet({title:"対戦人数を選択",body:"あなた + CPU で対戦します（3〜6人）<br>手札を早く出し切るゲームです。最後まで残るとペナルティ。",
+    btns:[3,4,5,6].map(n=>[`${n}人（CPU×${n-1}）`,()=>chooseDiff(n-1)])});
+}
+function chooseDiff(nCpu){
+  showSheet({title:"CPUの強さを選択",
+    body:"やさしい：手なりで出す<br>ふつう：役を作って出す<br>つよい：場の回収を活かして手札を育て、上がりを狙う",
+    btns:[["やさしい",()=>newGame(nCpu,"easy")],["ふつう",()=>newGame(nCpu,"normal")],["つよい",()=>newGame(nCpu,"hard")]]});
+}
+function newGame(nCpu,diff){
+  diffLevel=diff; over=false;
+  players=[{name:"あなた",cpu:false,hand:[],done:false,rank:0,pen:0}];
+  for(let i=0;i<nCpu;i++) players.push({name:CPU_NAMES[i],cpu:true,hand:[],done:false,rank:0,pen:0});
+  newRound(Math.floor(Math.random()*N()));
+}
+function newRound(starter){
+  gen++;
+  fastFwd=false;
+  deck=shuffle([].concat(...[1,2,3,4,5,6,7].map(v=>Array(9).fill(v))));
+  for(const p of players){ p.hand=deck.splice(0,8); p.done=false; p.rank=0; }
+  // 手札は並べ替え禁止＝配られた順のまま
+  field=null; fieldOwner=-1; passers=new Set(); finishOrder=[];
+  turnIdx=starter; busy=false;
+  selStart=-1; selLen=0;
+  render();
+  const g=gen;
+  msg(`スタートは <span class="em">${players[starter].name}</span>。好きなカードから出せます`);
+  setTimeout(()=>step(g), 1200);
+}
+
+/* ================= 描画 ================= */
+function msg(h){ $("msg").innerHTML=h; }
+function cardHTML(num,cls=""){
+  return `<div class="card n${num} ${cls}"><span class="num">${num}</span><span class="bird">${BIRD[num]}</span></div>`;
+}
+function groupsOf(hand){
+  // 手札の連続する同数字をまとめてグループ化（並べ替え禁止なので位置that重要）
+  const g=[]; let i=0;
+  while(i<hand.length){ let j=i; while(j<hand.length&&hand[j]===hand[i]) j++; g.push({num:hand[i],start:i,count:j-i}); i=j; }
+  return g;
+}
+function render(){
+  $("topinfo").textContent=`${N()}人 ・ CPU:${DIFF_LABEL[diffLevel]} ・ 早く出し切ればあがり ・ 最下位はペンギン-1`;
+  $("others").innerHTML=players.map((p,i)=>{
+    if(i===0) return "";
+    const st = p.done ? `<div class="st">${rankLabel(p.rank)}</div>`
+      : (fieldOwner===i ? `<div class="st up">場を確保中</div>`
+      : (passers.has(i) ? `<div class="st ps">パス</div>` : `<div class="st">&nbsp;</div>`));
+    return `<div class="who${turnIdx===i&&!over?" active":""}${p.done?" done":""}">
+      <div class="nm">🐧${"🐧".repeat(Math.max(0,p.pen))||""} ${p.name}</div>
+      <div class="cnt">手札 ${p.hand.length}枚</div>
+      ${st}</div>`;
+  }).join("");
+  // 場
+  if(field){
+    $("fieldcards").innerHTML=Array(field.count).fill(0).map(()=>cardHTML(field.num)).join("");
+    $("fieldinfo").innerHTML=`<span class="em">${players[fieldOwner].name}</span> が出した
+      <b>${field.num}が${field.count}枚</b>　—　これより強い役（枚数が多い／同枚数なら数字が上）を出すかパス`;
+  }else{
+    $("fieldcards").innerHTML=`<span style="opacity:.4;font-size:.8rem">場は空</span>`;
+    $("fieldinfo").innerHTML=`好きなカードを出せます`;
+  }
+  const me=players[0];
+  $("myhead").innerHTML=`🐧${"🐧".repeat(Math.max(0,me.pen))||""} あなた ${me.done?`（${rankLabel(me.rank)}）`:`・手札 ${me.hand.length}枚`}`;
+  renderHand(false);
+}
+function rankLabel(r){ return r===1?"1抜け🥇":r===2?"2抜け🥈":r===3?"3抜け🥉":`${r}番目`; }
+
+function renderHand(interactive){
+  const me=players[0];
+  if(me.done){ $("hand").innerHTML=`<div style="opacity:.5;font-size:.8rem;padding:16px">あがりました</div>`; return; }
+  $("hand").innerHTML=me.hand.map((v,i)=>{
+    const inSel = interactive && selStart>=0 && i>=selStart && i<selStart+selLen;
+    const selectable = interactive && isSelectableStart(i);
+    return cardHTML(v, (inSel?"sel ":"")+(selectable&&!inSel?"selectable ":"")+"dim");
+  }).join("");
+  if(interactive){
+    [...$("hand").children].forEach((el,i)=>{ el.onclick=()=>{ if(busy) return; tapCard(i); }; });
+  }
+}
+// 位置iが「選択の起点」になれるか（そこから同じ数字が連続していれば束にできる）
+function isSelectableStart(i){
+  const me=players[0];
+  // 束の起点は「直前が違う数字（またはindex0）」に限定して二重選択を防ぐ
+  return true;
+}
+
+/* ================= 選択（連続する同数字の束） ================= */
+function tapCard(i){
+  const me=players[0], v=me.hand[i];
+  // その位置を含む「連続する同数字ブロック」を特定
+  let s=i; while(s>0 && me.hand[s-1]===v) s--;
+  let e=i; while(e<me.hand.length-1 && me.hand[e+1]===v) e++;
+  const blockLen=e-s+1;
+  if(selStart===s){
+    // 同じブロックを再タップ → 枚数を1増やす（最大 blockLen）、超えたら解除
+    selLen = selLen>=blockLen ? 0 : selLen+1;
+    if(selLen===0) selStart=-1;
+  }else{
+    selStart=s; selLen=1;
+  }
+  updateControls();
+  renderHand(true);
+}
+function updateControls(){
+  const me=players[0];
+  let ok=false, why="";
+  if(selStart>=0 && selLen>0){
+    const play={num:me.hand[selStart], count:selLen};
+    ok = field ? stronger(play, field) : true;
+    why = ok ? `${play.num}を${play.count}枚出す` : `場（${field.num}が${field.count}枚）より弱い`;
+  }
+  $("controls").innerHTML="";
+  const mk=(label,cls,fn,dis)=>{ const b=document.createElement("button"); b.className="act"+(cls?" "+cls:""); b.textContent=label; b.disabled=!!dis; b.onclick=fn; return b; };
+  $("controls").appendChild(mk(selStart>=0?why:"カードを選択", "", ()=>humanPlay(), !ok));
+  if(field) $("controls").appendChild(mk("パス", "pass", ()=>humanPass()));
+}
+
+/* ================= 手番 ================= */
+function nextActive(i){ let j=i; do{ j=(j+1)%N(); }while(players[j].done); return j; }
+
+async function step(myGen){
+  if(myGen!==undefined && myGen!==gen) return;
+  if(over) return;
+  // 全員が場主以外パス → 場主が場を流して continues
+  render();
+  const p=players[turnIdx];
+  if(p.cpu){
+    msg(`🤖 ${p.name} が考えています…`);
+    await sleep(1600);
+    const mv=cpuMove(turnIdx);
+    if(mv.pass){ await doPass(turnIdx); }
+    else{ await doPlay(turnIdx, mv.start, mv.count); }
+  }else{
+    busy=false;
+    selStart=-1; selLen=0;
+    updateControls();
+    renderHand(true);
+    msg(field ? "強い役を出すか、パスしてください" : "好きなカードを出してください");
+  }
+}
+
+function humanPlay(){
+  if(busy || selStart<0) return;
+  busy=true;
+  doPlay(0, selStart, selLen);
+}
+function humanPass(){
+  if(busy) return;
+  busy=true;
+  doPass(0);
+}
+
+/* カードを出す */
+async function doPlay(pi, start, count){
+  if(over || players[pi]===undefined) return;
+  const myGen=gen;
+  const p=players[pi];
+  const num=p.hand[start];
+  const play={num, count};
+  // 場のカードを回収するかどうか（前の場カードがある場合）
+  const prevField = field;
+  // 手札から除去
+  p.hand.splice(start, count);
+  field=play; fieldOwner=pi; passers.clear();
+  const pn = pi===0?`<span class="em">あなた</span>`:`🤖 ${p.name}`;
+  render();
+  msg(`${pn} は <b>${num}を${count}枚</b> 出した`);
+  await sleep(700);
+
+  // 直前に場にあったカードを「手札に加える or 捨てる」
+  if(prevField){
+    if(pi===0){
+      await new Promise(res=>{
+        showSheet({title:"場のカードをどうする？",
+          body:`<div style="display:flex;gap:4px;justify-content:center;margin:6px 0">${Array(prevField.count).fill(0).map(()=>cardHTML(prevField.num,"small")).join("")}</div>
+            <b>${prevField.num}が${prevField.count}枚</b><br>手札に加えると、同じ数字とつなげて大きな役を作れます。<br>
+            <span style="font-size:.7rem;opacity:.7">※加えたカードは手札の好きな位置に置けます</span>`,
+          btns:[["手札に加える",()=>{ pickupHuman(prevField, res); }],
+                ["捨てる",()=>{ res(); }]]});
+      });
+    }else{
+      cpuPickup(pi, prevField);
+    }
+  }
+  if(myGen!==gen) return;
+  render();
+  await afterMove(pi);
+}
+// 人間が回収：実際の手札を見せて、すき間をタップして差し込む。done=完了通知
+function pickupHuman(picked, done){
+  const me=players[0];
+  const cards=Array(picked.count).fill(picked.num);
+  renderInsertUI(me, picked, cards, done);
+}
+function renderInsertUI(me, picked, cards, done){
+  // 手札を並べ、カードとカードの間に「ここに置く」スロットを挟む
+  const slot=(pos)=>{
+    const isAdj = (pos>0 && me.hand[pos-1]===picked.num) || (pos<me.hand.length && me.hand[pos]===picked.num);
+    return `<span class="ins-slot${isAdj?" adj":""}" data-pos="${pos}">＋</span>`;
+  };
+  let row=slot(0);
+  for(let i=0;i<me.hand.length;i++){
+    row += `<span class="ins-card">${cardHTML(me.hand[i],"small")}</span>` + slot(i+1);
+  }
+  showSheet({title:`${picked.num}を${picked.count}枚 どこに置く？`,
+    body:`<div style="font-size:.72rem;opacity:.75;margin-bottom:8px">
+        置きたい位置の <b style="color:var(--gold)">＋</b> をタップ。<br>
+        <span style="color:var(--gold)">金色の＋</span>＝同じ数字の隣（まとめて出せる大きな役になります）</div>
+      <div class="ins-row">${row}</div>
+      <div style="margin-top:8px;font-size:.7rem;opacity:.6">追加するカード：${Array(picked.count).fill(0).map(()=>cardHTML(picked.num,"mini")).join("")}</div>`,
+    btns:[["やっぱり捨てる",()=>{ closeSheet(); done&&done(); },"g"]]});
+  $("sbody").querySelectorAll(".ins-slot").forEach(el=>{
+    el.onclick=()=>{ insertAt(me,cards,+el.dataset.pos); closeSheet(); done&&done(); };
+  });
+}
+function insertAt(me,cards,pos){ me.hand.splice(pos,0,...cards); render(); }
+
+// CPUの回収：同じ数字があれば隣接させて回収、なければ役に応じて判断
+function cpuPickup(pi, picked){
+  const p=players[pi], hard=diffLevel==="hard";
+  const haveSame = p.hand.includes(picked.num);
+  // つよい/ふつうは、同じ数字を持っている or 枚数が多い塊なら回収して育てる
+  const worth = haveSame || picked.count>=2 || (hard && picked.num>=5);
+  // やさしいはランダム寄り
+  const take = diffLevel==="easy" ? Math.random()<0.5 : worth;
+  if(!take) return;
+  const cards=Array(picked.count).fill(picked.num);
+  // 同じ数字の右隣に挿入（連結）
+  let pos=p.hand.length;
+  for(let i=0;i<p.hand.length;i++){ if(p.hand[i]===picked.num){ pos=i+1; } }
+  p.hand.splice(pos,0,...cards);
+}
+
+/* パス */
+async function doPass(pi){
+  if(over || players[pi]===undefined) return;
+  const myGen=gen;
+  const p=players[pi];
+  passers.add(pi);
+  const pn = pi===0?`<span class="em">あなた</span>`:`🤖 ${p.name}`;
+  render();
+  const drawn = deck.length ? deck.pop() : null;
+  if(drawn!=null){
+    if(pi===0){
+      msg(`あなたはパス。山札から <b>${drawn}</b> を引いた`);
+      await sleep(500);
+      await new Promise(res=>{
+        showSheet({title:"山札から引いた",
+          body:`<div style="display:flex;justify-content:center;margin:6px 0">${cardHTML(drawn)}</div>
+            <b>${drawn}</b> を手札に加える？<br>
+            <span style="font-size:.7rem;opacity:.7">加えると同じ数字とつなげて役を作れます</span>`,
+          btns:[["手札に加える",()=>{ pickupHuman({num:drawn,count:1}, res); }],
+                ["捨てる",()=>res()]]});
+      });
+    }else{
+      cpuPickup(pi, {num:drawn, count:1});
+      msg(`${pn} はパス（山札から1枚引いた）`);
+      await sleep(650);
+    }
+  }else{
+    msg(`${pn} はパス（山札が尽きているため引けない）`);
+    await sleep(650);
+  }
+  render();
+  if(myGen!==gen) return;
+  await afterMove(pi);
+}
+
+/* 手番後の処理：あがり判定・場流し・手番送り */
+async function afterMove(pi){
+  const p=players[pi];
+  let justFinished=false;
+  // あがり判定
+  if(p.hand.length===0 && !p.done){
+    p.done=true;
+    finishOrder.push(pi);
+    p.rank=finishOrder.length;
+    justFinished=true;
+    msg(`<span class="win">${pi===0?"あなた":p.name} があがり！（${rankLabel(p.rank)}）</span>`);
+    await sleep(1200);
+    // あなたがあがって、まだ勝負が続くなら「結果まで飛ばす」を提案
+    if(pi===0 && !fastFwd && active().length>1){
+      await new Promise(res=>{
+        showSheet({title:`あがり！（${rankLabel(p.rank)}）`,
+          body:`残りはCPU同士の勝負です。<br>最後まで見ますか？`,
+          btns:[["結果まで飛ばす",()=>{ fastFwd=true; res(); }],
+                ["最後まで見る",()=>res()]]});
+      });
+    }
+  }
+  // 残り1人になったら終了（最後の1人を最下位に）
+  const rem=active();
+  if(rem.length<=1){
+    if(rem.length===1){ players[rem[0]].rank=N(); finishOrder.push(rem[0]); players[rem[0]].done=true; }
+    endRound();
+    return;
+  }
+  // 場主があがった場合：場を流して、次のアクティブ（あがった人の次）から
+  if(justFinished && fieldOwner===pi){
+    field=null; fieldOwner=-1; passers.clear();
+    turnIdx=nextActive(pi);
+    step(gen); return;
+  }
+  // 場流し判定（公式）：場主以外の現役が全員パスしたら場を捨て、場主から再開
+  if(field && fieldOwner>=0 && !players[fieldOwner].done){
+    const others=active().filter(i=>i!==fieldOwner);
+    if(others.length>0 && others.every(i=>passers.has(i))){
+      field=null; passers.clear();
+      turnIdx=fieldOwner;
+      msg(`全員パス。場が流れて <span class="em">${players[fieldOwner].name}</span> から好きに出せます`);
+      await sleep(1000);
+      step(gen); return;
+    }
+  }
+  // 場が空（誰も出していない or 流れた直後）なら次のアクティブから自由出し
+  if(!field){
+    turnIdx=nextActive(pi);
+    passers.clear();
+    step(gen); return;
+  }
+  // 通常の手番送り（あがった人・パスした人を飛ばす）
+  turnIdx=nextActive(pi);
+  step(gen);
+}
+
+/* ================= CPU 思考 ================= */
+function cpuMove(pi){
+  const p=players[pi], hand=p.hand;
+  const easy=diffLevel==="easy", hard=diffLevel==="hard";
+  const gs=groupsOf(hand);
+  // 出せる候補（場より強い役）を列挙
+  const cands=[];
+  for(const g of gs){
+    for(let c=1;c<=g.count;c++){
+      const play={num:g.num,count:c,start:g.start};
+      if(!field || stronger(play,field)) cands.push(play);
+    }
+  }
+  if(!field){
+    // 場が空：基本は「弱い役」から捌く。手札を減らしたいので単発の小さい数字を優先
+    // ただし つよい は、大きな束は温存して小刻みに出す
+    if(!cands.length) return {pass:true};  // 起こらないが保険
+    let pick;
+    if(easy){ pick=cands[Math.floor(Math.random()*cands.length)]; }
+    else{
+      // 最小の数字・最小枚数から。ただし束（count>=3）は崩さず温存
+      const singles=cands.filter(c=>c.count===1).sort((a,b)=>a.num-b.num);
+      const small=cands.filter(c=>c.count<=2).sort((a,b)=>a.count-b.count||a.num-b.num);
+      pick = (hard && singles.length) ? singles[0] : (small[0]||cands[0]);
+    }
+    return {start:pick.start, count:pick.count};
+  }
+  // 場がある：勝てる最小の役で受ける（強い役は温存）。勝てないならパス
+  if(!cands.length) return {pass:true};
+  // 残り手札が少ないなら強気に出し切りにいく
+  const nearEnd = hand.length<=3;
+  let pool=[...cands].sort((a,b)=> (a.count-b.count) || (a.num-b.num));
+  let pick=pool[0];
+  if(easy && Math.random()<0.4) pick=pool[Math.floor(Math.random()*pool.length)];
+  // つよい：あがりに直結する出し（残り全部出せる）なら最優先
+  if(hard || !easy){
+    const finisher=cands.find(c=>c.count===hand.length);
+    if(finisher) pick=finisher;
+  }
+  // ふつう/つよいは、場が弱い(1枚)のに大役を崩すのを避けてパスすることも
+  if(!easy && !nearEnd && pick.count>=3 && field.count===1 && Math.random()<0.5) return {pass:true};
+  return {start:pick.start, count:pick.count};
+}
+
+/* ================= ラウンド終了 ================= */
+function endRound(){
+  // 最下位がペナルティ（ペンギン-1）
+  const last=finishOrder[finishOrder.length-1];
+  players[last].pen = (players[last].pen||0); // 表示用
+  // ペンギンは各自2個スタート、最下位が1個失う
+  if(players[last]._peng===undefined) players.forEach(p=>p._peng=(p._peng??2));
+  players[last]._peng--;
+  players[last].pen = 2-players[last]._peng;
+
+  const meRank=players[0].rank;
+  const loser=players[last];
+  const gameOver = loser._peng<=0;
+
+  if(gameOver){
+    over=true;
+    // 勝者：ペンギンを失っていない人たち（＝最後まで生き残り）。ここでは最下位以外の生存
+    const meLost = loser===players[0];
+    saveRecord({t:Date.now(), n:N(), diff:diffLevel, win:!meLost, rank:meRank});
+    showSheet({title: meLost?"😢 あなたの負け…":"🎉 あなたの勝ち！",
+      body:`<b>${loser.name}</b> がペンギンを2個失って脱落。<br><br>
+        今回の順位：${finishOrder.map((i,k)=>`${rankLabel(k+1)} ${players[i].name}`).join("<br>")}`,
+      btns:[["もう一度遊ぶ",()=>chooseSetup()],["閉じる",closeSheet,"g"]]});
+    return;
+  }
+  // 続行
+  showSheet({title:`ラウンド終了`,
+    body:`順位：${finishOrder.map((i,k)=>`${rankLabel(k+1)} ${players[i].name}`).join("<br>")}<br><br>
+      <b>${loser.name}</b> がペンギンを1個失った（残り${loser._peng}個）<br>
+      ペンギンを2個失うと脱落です。`,
+    btns:[["次のラウンドへ",()=>newRound(last)]]});
+}
+
+/* ================= シート ================= */
+function showSheet({title,body,btns}){
+  $("stitle").textContent=title;
+  $("sbody").innerHTML=body||"";
+  $("sbtns").innerHTML="";
+  for(const [label,fn,cls] of (btns||[])){
+    const b=document.createElement("button");
+    b.className="act"+(cls?" "+cls:""); b.textContent=label;
+    b.onclick=()=>{ closeSheet(); fn&&fn(); };
+    $("sbtns").appendChild(b);
+  }
+  $("veil").classList.add("show");
+}
+function closeSheet(){ $("veil").classList.remove("show"); }
+
+/* ================= 履歴表示 ================= */
+$("histBtn").onclick=async()=>{
+  if($("veil").classList.contains("show")) return;
+  const h=await loadHistory();
+  if(!h.length){
+    showSheet({title:"対戦履歴",body:`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
+  const wins=h.filter(r=>r.win).length;
+  const rows=[...h].reverse().slice(0,15).map(r=>{
+    const dt=new Date(r.t);
+    return `${dt.getMonth()+1}/${dt.getDate()}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":"敗退"}`;
+  }).join("<br>");
+  showSheet({title:"対戦履歴",
+    body:`<b>通算 ${h.length}戦 ${wins}勝</b><br><span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
+    btns:[["閉じる",closeSheet,"g"],["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },"g"]]});
+};
+
+chooseSetup();
+<\/script>
+
+
+
+<style>
+#helpveil{position:fixed; inset:0; background:rgba(6,8,12,.9); z-index:200; display:none;
+  align-items:center; justify-content:center; padding:14px;}
+#helpveil.show{display:flex;}
+#helppanel{background:#20242e; color:#f0ecdf; border:2px solid rgba(255,255,255,.25);
+  border-radius:16px; max-width:520px; width:100%; max-height:88vh; display:flex; flex-direction:column;
+  font-family:inherit;}
+#helphead{display:flex; align-items:center; gap:10px; padding:14px 16px 10px; border-bottom:1px solid rgba(255,255,255,.14);}
+#helphead h2{font-size:1rem; font-weight:800; letter-spacing:.06em;}
+#helpbody{padding:12px 16px 16px; overflow-y:auto; text-align:left; font-size:.78rem; line-height:1.85;}
+#helpbody h3{font-size:.8rem; font-weight:800; margin:14px 0 3px; color:#e8c46a; letter-spacing:.04em;}
+#helpbody h3:first-of-type{margin-top:4px;}
+#helpbody p{opacity:.92;}
+#helpbody .hgoal{background:rgba(255,255,255,.08); border-radius:8px; padding:8px 10px; margin-bottom:6px;}
+#helpclose{margin-left:auto; font:inherit; font-weight:800; font-size:.7rem; padding:5px 14px;
+  border-radius:999px; border:1.5px solid rgba(255,255,255,.4); background:transparent; color:#f0ecdf; cursor:pointer;}
+#helpBtn{font:inherit; font-size:.68rem; font-weight:800; padding:4px 12px; border-radius:999px;
+  border:1.5px solid rgba(255,255,255,.4); background:transparent; color:inherit; cursor:pointer;}
+</style>
+
+<div id="helpveil"><div id="helppanel">
+  <div id="helphead"><h2>ことりならべ — 遊び方</h2><button id="helpclose">閉じる</button></div>
+  <div id="helpbody"></div>
+</div></div>
+<script>
+(function(){
+  var HTML=`<p class="hgoal"><b>目的</b>　手札をいち早く出し切る「大富豪」系のゲーム。最後まで残るとペンギンを失い、2個失うと脱落。最後まで生き残れば勝ちです。</p><h3>手札は並べ替えできない</h3><p>配られた手札は<b>並び順を変えられません</b>。この制約がこのゲームの肝です。<br>だから最初はバラバラで、大きな役が作れません。</p><h3>カードの出し方</h3><p>自分の番に、手札からカードを出します。<b>手札で隣り合っている同じ数字は、まとめて出せます</b>（例：3が3枚並んでいれば3枚出し）。<br>場に出ているカードより<b>強い役</b>しか出せません。出せない・出したくないときはパスします。</p><h3>役の強さ</h3><p><b>枚数が多いほど強い</b>（1が2枚 ＞ 7が1枚）。<br><b>同じ枚数なら、数字が大きいほど強い</b>（7が2枚 ＞ 3が2枚）。</p><h3>カードを回収して手札を育てる（重要）</h3><p>手札を強化する方法が2つあります。<br>①<b>カードを出したとき</b>：直前に場にあったカードを「手札に加える」か「捨てる」か選べます。<br>②<b>パスしたとき</b>：山札から1枚引き、「手札に加える」か「捨てる」か選べます。<br>加えるときは絵をタップして同じ数字の隣に差し込み、<b>大きな役を育てられます</b>。並べ替えできないぶん、これが手札を強化する手段です。</p><h3>場が流れる</h3><p>カードを出した人以外の全員がパスをして、再びその人の番が来たら、場のカードは全て捨てられ、その人から好きなカードを出せます。</p><h3>勝敗</h3><p>手札を出し切った人から順に「あがり」。最後まで残った人がペンギンを1個失います。<br>ペンギンを2個失うと脱落。生き残れば勝ちです。</p><h3>CPUについて</h3><p>つよいCPUは、場のカードを回収して手札を育て、大きな役は温存し、終盤に一気に出し切る動きをします。</p>`;
+  var veil=document.getElementById("helpveil");
+  document.getElementById("helpbody").innerHTML=HTML;
+  function open(){ veil.classList.add("show"); }
+  function close(){ veil.classList.remove("show"); }
+  document.getElementById("helpBtn").onclick=open;
+  document.getElementById("helpclose").onclick=close;
+  veil.onclick=function(e){ if(e.target===veil) close(); };
+  window.openHelp=open;
+})();
+<\/script>
+
+</body>
+</html>
+</script>
+<script type="text/plain" id="src-pengin"><!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ぺんぎんの山 — CPU対戦（非公式）</title>
+<style>
+  :root{
+    --bg1:#1f3a4d; --bg2:#0e1c28;
+    --ice:#e8f4fa; --ink:#22303a;
+    --gold:#e6c14a; --orca:#c0483b;
+    --p1:#e0655f; --p2:#5aa9d6; --p3:#6cbf78; --p4:#e0b24a; --p5:#a97fd0; --p6:#5ec4c0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","BIZ UDGothic","Yu Gothic",system-ui,sans-serif;
+    background:radial-gradient(ellipse at 50% -10%, var(--bg1), var(--bg2) 72%);
+    color:#eaf3f8; min-height:100vh; user-select:none;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  #app{width:100%; max-width:600px; padding:8px 10px 24px;}
+  header{display:flex; justify-content:space-between; align-items:center; padding:4px 2px 6px; gap:6px;}
+  h1{font-size:1.12rem; letter-spacing:.16em; font-weight:800; white-space:nowrap;}
+  h1 small{font-size:.55rem; letter-spacing:.08em; opacity:.5; margin-left:5px;}
+  #helpBtn,#histBtn{
+    font:inherit; font-size:.66rem; font-weight:800; padding:4px 11px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,.4); background:transparent; color:#eaf3f8; cursor:pointer;
+  }
+  #topinfo{font-size:.66rem; opacity:.75; text-align:center; padding-bottom:8px;}
+
+  /* ---- 他プレイヤー ---- */
+  #others{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:8px;}
+  .who{
+    background:rgba(0,0,0,.24); border-radius:11px; padding:6px 10px; text-align:center;
+    border:1.5px solid transparent; min-width:80px;
+  }
+  .who.active{border-color:var(--gold);}
+  .who.out{opacity:.45;}
+  .who .nm{font-size:.7rem; font-weight:800; white-space:nowrap;}
+  .who .cnt{font-size:.62rem; opacity:.75; margin-top:2px;}
+  .who .orca{font-size:.6rem; color:var(--orca); font-weight:800; margin-top:1px;}
+  .who .st{font-size:.58rem; font-weight:800; color:var(--orca);}
+
+  /* ---- ピラミッド ---- */
+  #pyramid{
+    background:rgba(0,0,0,.24); border-radius:14px; padding:14px 8px 10px;
+    margin-bottom:8px; overflow-x:auto;
+  }
+  .prow{display:flex; justify-content:center; gap:3px; margin-bottom:3px;}
+  .cell{
+    width:38px; height:50px; border-radius:6px; flex:0 0 auto; position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .cell.empty{ background:rgba(255,255,255,.05); border:1.5px dashed rgba(255,255,255,.14); }
+  .cell.slot{ cursor:pointer; border:1.5px dashed var(--gold); background:rgba(230,193,74,.12); }
+  .cell.slot:active{ background:rgba(230,193,74,.3); }
+  .peng{
+    width:38px; height:50px; border-radius:6px; display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem; box-shadow:0 2px 4px rgba(0,0,0,.35); border:2px solid rgba(255,255,255,.25);
+  }
+  .c0{background:var(--p1);} .c1{background:var(--p2);} .c2{background:var(--p3);}
+  .c3{background:var(--p4);} .c4{background:var(--p5);} .c5{background:var(--p6);}
+  .peng.pop{animation:pop .3s ease;}
+  @keyframes pop{0%{transform:scale(.4);}100%{transform:scale(1);}}
+
+  #msg{text-align:center; font-size:.82rem; font-weight:700; min-height:2.6em; padding:5px 10px; line-height:1.5;}
+  #msg .em{color:var(--gold);} #msg .bad{color:var(--orca);}
+
+  /* ---- 手札 ---- */
+  #myarea{
+    background:linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.42));
+    border-top:3px solid var(--p2); border-radius:14px 14px 0 0; padding:9px 10px 12px;
+  }
+  #myhead{display:flex; align-items:center; gap:8px; font-size:.74rem; font-weight:800; justify-content:center; margin-bottom:2px;}
+  #myhint{text-align:center; font-size:.6rem; opacity:.6; margin-bottom:6px;}
+  #hand{display:flex; gap:6px; justify-content:center; flex-wrap:wrap;}
+  #hand .handcard{
+    width:56px; height:64px; cursor:pointer; transition:transform .1s; position:relative;
+    flex-direction:column; gap:0;
+  }
+  #hand .handcard .hc-icon{ font-size:1.5rem; line-height:1; }
+  #hand .handcard .hc-count{
+    font-size:1.15rem; font-weight:800; line-height:1; margin-top:2px;
+    color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6);
+  }
+  #hand .handcard .hc-count::before{ content:"×"; font-size:.7rem; opacity:.85; margin-right:1px; }
+  #hand .handcard.sel{transform:translateY(-8px); box-shadow:0 0 0 3px var(--gold), 0 5px 8px rgba(0,0,0,.4);}
+  #hand .handcard.dim{opacity:.92;}
+  #controls{display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap; min-height:20px;}
+
+  #veil{position:fixed; inset:0; background:rgba(6,14,20,.86); z-index:60;
+    display:none; align-items:center; justify-content:center; padding:16px;}
+  #veil.show{display:flex;}
+  #sheet{background:#16283a; border:2px solid #35576f; border-radius:16px;
+    padding:20px; max-width:400px; width:100%; text-align:center;}
+  #sheet h2{font-size:1rem; margin-bottom:10px; letter-spacing:.05em;}
+  #sheet .body{font-size:.8rem; line-height:1.8; margin-bottom:14px; max-height:52vh; overflow-y:auto;}
+  #sheet .btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+  button.act{
+    font:inherit; font-weight:800; letter-spacing:.05em; padding:9px 22px; border-radius:999px;
+    border:none; cursor:pointer; background:var(--gold); color:#3b2d0c; box-shadow:0 3px 0 #b0932e;
+  }
+  button.act.g{background:transparent; color:#eaf3f8; border:1.5px solid rgba(255,255,255,.4); box-shadow:none;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>ぺんぎんの山<small>非公式・CPU対戦</small></h1>
+    <div style="display:flex; gap:6px">
+      <button id="helpBtn">遊び方</button>
+      <button id="histBtn">履歴</button>
+    </div>
+  </header>
+  <div id="topinfo"></div>
+  <div id="others"></div>
+  <div id="pyramid"></div>
+  <div id="msg"></div>
+  <div id="myarea">
+    <div id="myhead"></div>
+    <div id="myhint">カードを選んでから、置ける場所（金の枠）をタップ</div>
+    <div id="hand"></div>
+    <div id="controls"></div>
+  </div>
+</div>
+
+<div id="veil"><div id="sheet">
+  <h2 id="stitle"></h2>
+  <div class="body" id="sbody"></div>
+  <div class="btns" id="sbtns"></div>
+</div></div>
+
+<!-- Firebase（GitHub Pagesで履歴を共有する場合に設定。未設定でも動きます） -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"><\/script>
+<script>
+"use strict";
+/* ================= 履歴 ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDML257ZXglBfRZ6zKkS2l4rIZBpeyNuTo",
+  authDomain: "bodogeshu.firebaseapp.com",
+  databaseURL: "https://bodogeshu-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bodogeshu",
+};
+const HKEY="pengin-history";
+const FPATH="pengin/history";
+let fdb=null;
+try{
+  if(typeof firebase!=="undefined" && firebaseConfig.databaseURL){
+    firebase.initializeApp(firebaseConfig); fdb=firebase.database();
+  }
+}catch(e){}
+const STORE=(()=>{ try{
+  if(window.storage) return window.storage;
+  if(window.parent && window.parent!==window && window.parent.storage) return window.parent.storage;
+}catch(e){} return null; })();
+const storageMode=()=> fdb ? "Firebase（全端末で共有）" : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+async function loadHistory(){
+  try{
+    if(fdb){ const s=await fdb.ref(FPATH).once("value"); return s.val()||[]; }
+    if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
+    return JSON.parse(localStorage.getItem(HKEY)||"[]");
+  }catch(e){ return []; }
+}
+async function saveRecord(rec){
+  try{
+    const h=await loadHistory(); h.push(rec);
+    if(h.length>100) h.splice(0,h.length-100);
+    if(fdb){ await fdb.ref(FPATH).set(h); return; }
+    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
+    localStorage.setItem(HKEY, JSON.stringify(h));
+  }catch(e){}
+}
+async function clearHistory(){
+  try{
+    if(fdb){ await fdb.ref(FPATH).remove(); }
+    else if(STORE){ await STORE.delete(HKEY,false); }
+    else localStorage.removeItem(HKEY);
+  }catch(e){}
+}
+
+/* ================= カード ================= */
+/* 5色 × 各7枚 = 35枚（正規版準拠） */
+const COLORS=["🐧","🐤","🐦","🦆","🦩"];         // 5色を絵文字で区別（色帯も付く）
+const CNAME=["あか","あお","みどり","きいろ","むらさき"];
+const NCOL=5, PER=7, TOTAL=NCOL*PER;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+let fastFwd=false;
+const sleep=ms=>new Promise(r=>setTimeout(r, fastFwd?0:ms));
+const $=id=>document.getElementById(id);
+
+/* ================= 状態 ================= */
+const CPU_NAMES=["ペネ","コーロ","ロイ","ジェンツー","アデリー"];
+const DIFF_LABEL={easy:"やさしい",normal:"ふつう",hard:"つよい"};
+let players, pyramid, baseSize, turnIdx, diffLevel, over, busy, roundNo, maxRounds, startIdx;
+let selCard=-1;
+const N=()=>players.length;
+const alive=()=>players.map((p,i)=>p.out?null:i).filter(i=>i!=null);
+
+/* ピラミッド：pyramid[row] = 配列。row0=最下段(baseSize枚)、上に行くほど-1 */
+function chooseSetup(){
+  showSheet({title:"対戦人数を選択",body:"あなた + CPU で対戦します（2〜6人）<br>手札を出し切るゲーム。置けないとシャチチップ（失点）。",
+    btns:[2,3,4,5,6].map(n=>[`${n}人（CPU×${n-1}）`,()=>chooseDiff(n-1)])});
+}
+function chooseDiff(nCpu){
+  showSheet({title:"CPUの強さを選択",
+    body:"やさしい：置ける場所に適当に置く<br>ふつう：自分の色を通しやすく置く<br>つよい：残り枚数を数え、相手の色を詰まらせる",
+    btns:[["やさしい",()=>newGame(nCpu,"easy")],["ふつう",()=>newGame(nCpu,"normal")],["つよい",()=>newGame(nCpu,"hard")]]});
+}
+function newGame(nCpu,diff){
+  diffLevel=diff; over=false;
+  players=[{name:"あなた",cpu:false,hand:[],out:false,orca:0}];
+  for(let i=0;i<nCpu;i++) players.push({name:CPU_NAMES[i],cpu:true,hand:[],out:false,orca:0});
+  maxRounds=N();                 // 人数分のラウンド
+  roundNo=0; startIdx=Math.floor(Math.random()*N());
+  newRound();
+}
+function newRound(){
+  roundNo++;
+  fastFwd=false;
+  // 2人:base7 / 5人:base7 / それ以外:base8（正規ルール）
+  baseSize = (N()===2||N()===5) ? 7 : 8;
+  const deck=shuffle([].concat(...COLORS.map((_,c)=>Array(PER).fill(c))));
+  for(const p of players){ p.hand=[]; p.out=false; }
+  // 均等配り（余りは先頭から）
+  let idx=0;
+  while(deck.length){ players[idx%N()].hand.push(deck.pop()); idx++; }
+  for(const p of players) p.hand.sort((a,b)=>a-b);
+  pyramid=[[]];                  // 最下段だけ用意
+  turnIdx=startIdx; busy=false; selCard=-1;
+  render();
+  msg(`ラウンド${roundNo}／${maxRounds}　スタートは <span class="em">${players[turnIdx].name}</span>`);
+  setTimeout(step, 1100);
+}
+
+/* ================= ピラミッド判定 ================= */
+/* 置ける位置の一覧を返す：{row, col} の配列 */
+function legalSpots(color){
+  const spots=[];
+  // 最下段（row0）：baseSize未満なら右端に追加可能。色は自由
+  if(pyramid[0].length < baseSize){
+    spots.push({row:0, col:pyramid[0].length});
+  }
+  // 上段：row>=1。col位置に置けるのは、下段の col と col+1 が埋まっていて、
+  //       そのどちらかと同じ色のとき
+  for(let r=1;r<baseSize;r++){
+    const below=pyramid[r-1]||[];
+    const cur=pyramid[r]||[];
+    const width=baseSize-r;               // その段の最大枚数
+    for(let col=0; col<width; col++){
+      if(cur[col]!==undefined) continue;  // すでに埋まっている
+      if(col!==cur.length) continue;       // 左詰め：次に置けるのは cur.length の位置のみ
+      const l=below[col], rgt=below[col+1];
+      if(l===undefined || rgt===undefined) continue;  // 真下の2枚が揃っていない
+      if(color===l || color===rgt) spots.push({row:r, col});
+    }
+  }
+  return spots;
+}
+function canPlaceAny(hand){
+  for(const c of new Set(hand)) if(legalSpots(c).length) return true;
+  return false;
+}
+
+/* ================= 描画 ================= */
+function msg(h){ $("msg").innerHTML=h; }
+function pengHTML(color, cls=""){ return `<div class="peng c${color} ${cls}">${COLORS[color]}</div>`; }
+function render(){
+  const orcaTxt=p=>p.orca>0?`🔴${p.orca}`:"";
+  $("topinfo").textContent=`${N()}人 ・ CPU:${DIFF_LABEL[diffLevel]} ・ ラウンド${roundNo}/${maxRounds} ・ 最下段${baseSize}枚`;
+  $("others").innerHTML=players.map((p,i)=>{
+    if(i===0) return "";
+    return `<div class="who${turnIdx===i&&!over?" active":""}${p.out?" out":""}">
+      <div class="nm">🐧 ${p.name}</div>
+      <div class="cnt">手札 ${p.hand.length}</div>
+      ${p.out?`<div class="st">脱落</div>`:""}
+      <div class="orca">シャチ ${p.orca}</div></div>`;
+  }).join("");
+  renderPyramid(null);
+  const me=players[0];
+  $("myhead").innerHTML=`🐧 あなた ・ 手札 ${me.hand.length} ・ シャチ ${me.orca}`;
+  renderHand(!over && turnIdx===0 && !me.out && !busy);
+}
+function renderPyramid(spots){
+  const rows=[];
+  for(let r=baseSize-1; r>=0; r--){           // 上段から表示
+    const width=baseSize-r;
+    const cur=pyramid[r]||[];
+    let cells="";
+    for(let col=0; col<width; col++){
+      if(cur[col]!==undefined){ cells+=pengHTML(cur[col]); }
+      else{
+        const spot = spots && spots.find(s=>s.row===r && s.col===col);
+        if(spot){ cells+=`<div class="cell slot" data-row="${r}" data-col="${col}"></div>`; }
+        else cells+=`<div class="cell empty"></div>`;
+      }
+    }
+    rows.push(`<div class="prow">${cells}</div>`);
+  }
+  $("pyramid").innerHTML=rows.join("");
+}
+function renderHand(interactive){
+  const me=players[0];
+  const counts={};
+  for(const c of me.hand) counts[c]=(counts[c]||0)+1;
+  $("hand").innerHTML=COLORS.map((_,c)=>{
+    if(!counts[c]) return "";
+    const sel = selCard===c ? "sel" : "dim";
+    return `<div class="peng handcard c${c} ${sel}" data-c="${c}">
+      <span class="hc-icon">${COLORS[c]}</span>
+      <span class="hc-count">${counts[c]}</span></div>`;
+  }).join("") || `<div style="opacity:.5;font-size:.8rem;padding:10px">手札なし</div>`;
+  if(interactive){
+    $("hand").querySelectorAll(".handcard").forEach(el=>{
+      el.onclick=()=>{ if(busy) return; selectCard(+el.dataset.c); };
+    });
+  }
+}
+function selectCard(c){
+  selCard = selCard===c ? -1 : c;
+  const spots = selCard>=0 ? legalSpots(selCard) : null;
+  renderHand(true);
+  renderPyramid(spots);
+  if(selCard>=0){
+    if(spots.length) msg(`${COLORS[selCard]}を置ける場所（金の枠）をタップ`);
+    else msg(`<span class="bad">${COLORS[selCard]}は今どこにも置けません</span>。別の色を選んでください`);
+    $("pyramid").querySelectorAll(".slot").forEach(el=>{
+      el.onclick=()=>{ if(busy) return; humanPlace(+el.dataset.row, +el.dataset.col); };
+    });
+  }else{
+    msg("カードを選んでください");
+  }
+}
+
+/* ================= 手番 ================= */
+function nextAlive(i){ let j=i, guard=0; do{ j=(j+1)%N(); guard++; }while(players[j].out && guard<=N()); return j; }
+
+async function step(){
+  if(over) return;
+  render();
+  const p=players[turnIdx];
+  if(p.out){ advance(); return; }
+  if(p.hand.length===0){ advance(); return; }     // 出し切り済みは飛ばす
+  // 置けないカードしかない → 脱落
+  if(!canPlaceAny(p.hand)){
+    p.out=true;
+    render();
+    msg(`<span class="bad">${p.name} はどのカードも置けず脱落…</span>（手札${p.hand.length}枚）`);
+    await sleep(1200);
+    await maybeOfferSkip(turnIdx);
+    advance(); return;
+  }
+  if(p.cpu){
+    msg(`🤖 ${p.name} が考えています…`);
+    await sleep(1200);
+    const mv=cpuMove(turnIdx);
+    if(!mv){                       // 合法手なし（保険）→ 脱落
+      p.out=true; render();
+      msg(`<span class="bad">${p.name} は置けず脱落…</span>`);
+      await sleep(1000); advance(); return;
+    }
+    await doPlace(turnIdx, mv.color, mv.row, mv.col);
+  }else{
+    busy=false; selCard=-1;
+    renderHand(true);
+    $("controls").innerHTML="";
+    msg("カードを選んでから、置ける場所をタップ");
+  }
+}
+function humanPlace(row,col){
+  if(busy || selCard<0) return;
+  busy=true;
+  const c=selCard; selCard=-1;
+  doPlace(0, c, row, col);
+}
+
+async function doPlace(pi, color, row, col){
+  const p=players[pi];
+  p.hand.splice(p.hand.indexOf(color),1);
+  if(!pyramid[row]) pyramid[row]=[];
+  pyramid[row][col]=color;
+  render();
+  const pn = pi===0?`<span class="em">あなた</span>`:`🤖 ${p.name}`;
+  msg(`${pn} は ${COLORS[color]} を ${row===0?"最下段":(row+1)+"段目"}に置いた`);
+  // ポップ演出
+  await sleep(700);
+  // あがり判定
+  if(p.hand.length===0){
+    msg(`<span class="em">${pi===0?"あなた":p.name} が手札を出し切った！</span>`);
+    await sleep(1100);
+    await maybeOfferSkip(pi);
+  }
+  await afterMove(pi);
+}
+
+/* あなたが退場（脱落 or 出し切り）し、まだ勝負が続くなら結果まで飛ばすか提案 */
+async function maybeOfferSkip(pi){
+  if(pi!==0 || fastFwd) return;
+  const stillPlaying = players.filter(p=>!p.out && p.hand.length>0);
+  if(stillPlaying.length<1) return;              // もう決着済み
+  // 自分以外にまだ打つ人がいる場合のみ
+  if(stillPlaying.every(p=>p===players[0])) return;
+  await new Promise(res=>{
+    showSheet({title: players[0].out?"脱落…":"出し切った！",
+      body:`このラウンドのあなたの出番は終わりです。<br>残りはCPU同士の勝負になります。`,
+      btns:[["結果まで飛ばす",()=>{ fastFwd=true; res(); }],
+            ["最後まで見る",()=>res()]]});
+  });
+}
+
+async function afterMove(pi){
+  // 全員が脱落 or 出し切ったら終了
+  const stillPlaying = players.filter(p=>!p.out && p.hand.length>0);
+  if(stillPlaying.length===0){ endRound(); return; }
+  // ピラミッドが完成（最上段=1枚が埋まった）したらラウンド終了
+  if(pyramid[baseSize-1] && pyramid[baseSize-1].length===1){
+    msg(`ピラミッド完成！ ラウンド終了`);
+    await sleep(1100);
+    endRound(); return;
+  }
+  advance();
+}
+function advance(){
+  if(over) return;
+  const rem=players.filter(p=>!p.out && p.hand.length>0);
+  if(rem.length===0){ endRound(); return; }
+  turnIdx=nextAlive(turnIdx);
+  // 出し切った人（out扱いではないが手札0）も飛ばす
+  let guard=0;
+  while(players[turnIdx].hand.length===0 && !players[turnIdx].out && guard<N()*2){ turnIdx=nextAlive(turnIdx); guard++; }
+  setTimeout(step, fastFwd?0:500);
+}
+
+/* ================= CPU ================= */
+/* 公開情報：ピラミッド＋自分の手札。まだ場に出ていない各色の枚数を数える */
+function unseenByColor(pi){
+  const cnt=Array(NCOL).fill(PER);
+  for(const row of pyramid) for(const c of row) if(c!==undefined) cnt[c]--;
+  for(const c of players[pi].hand) cnt[c]--;
+  return cnt;   // 他人の手札にありうる枚数
+}
+/* まだピラミッドに積める色か（最下段にその色があるか、または最下段自体がまだ空きあり） */
+function colorStillPlaceable(color){
+  if(pyramid[0].length < baseSize) return true;    // 最下段に空きがあればどの色も置ける
+  // 最下段が埋まっている場合、最下段にその色があれば上に伸ばせる可能性
+  return pyramid[0].includes(color);
+}
+function cpuMove(pi){
+  const p=players[pi], hand=p.hand;
+  const easy=diffLevel==="easy", hard=diffLevel==="hard";
+  const colors=[...new Set(hand)];
+  // 各色について合法手を集める
+  const moves=[];
+  for(const c of colors){
+    for(const s of legalSpots(c)) moves.push({color:c, row:s.row, col:s.col});
+  }
+  if(!moves.length) return null;   // 呼び出し側で脱落判定済み
+  if(easy) return moves[Math.floor(Math.random()*moves.length)];
+
+  const unseen=unseenByColor(pi);
+  const myCount={};
+  for(const c of hand) myCount[c]=(myCount[c]||0)+1;
+
+  // 各手を評価
+  let best=null, bs=-Infinity;
+  for(const m of moves){
+    let sc=0;
+    // ① 自分が多く持つ色を最下段に置く → その色を上に伸ばせる土台を作る
+    if(m.row===0){
+      sc += (myCount[m.color]||0)*3;        // 手札に多い色ほど土台にしたい
+      // 最下段の残り枠が少ないなら、通したい自分の色を今のうちに置く
+      const baseLeft = baseSize - pyramid[0].length;
+      if(baseLeft<=2) sc += (myCount[m.color]||0)*2;
+    } else {
+      // ② 上段に置く：自分の色を消化できるのは良い
+      sc += (myCount[m.color]||0)*2 + m.row;  // 上に行くほど手札が減り上出来
+    }
+    // ③ 相手が持ちがちな色（＝場にまだ多く残る色）を最下段の端に置くと、相手が伸ばしにくい…
+    //    逆に自分の色は端に置かない方が伸ばせる。ここは簡易に、自分の少ない色を土台にしない
+    if(m.row===0 && (myCount[m.color]||0)===1 && !hard) sc -= 1;
+    // ④ つよい：相手の色（unseenが多い＝他家が持つ可能性大）を最下段から締め出す
+    if(hard && m.row===0){
+      // 自分が持たない色ほど unseen が多い→それを土台に置くと相手を利する。避ける
+      const rivalColor = unseen[m.color] - (myCount[m.color]||0);
+      sc -= rivalColor*1.2;
+    }
+    sc += Math.random()* (hard?0.6:1.5);
+    if(sc>bs){ bs=sc; best=m; }
+  }
+  return best;
+}
+
+/* ================= ラウンド終了 ================= */
+function endRound(){
+  // 手札に残った枚数分シャチチップ（失点）
+  for(const p of players){ p.orca += p.hand.length; }
+  render();
+  const lines=players.map(p=>`${p.name}：+${p.hand.length}（累計 ${p.orca}）`).join("<br>");
+  if(roundNo>=maxRounds){
+    over=true;
+    const min=Math.min(...players.map(p=>p.orca));
+    const winners=players.filter(p=>p.orca===min).map(p=>p.name);
+    const meWin=players[0].orca===min;
+    saveRecord({t:Date.now(), n:N(), diff:diffLevel, win:meWin, orca:players[0].orca});
+    showSheet({title: meWin?"🎉 あなたの勝ち！":"ゲーム終了",
+      body:`最終シャチチップ（少ない方が勝ち）<br><br>${players.map(p=>`${p.name}：${p.orca}`).join("<br>")}<br><br>
+        勝者：<b>${winners.join("、")}</b>`,
+      btns:[["もう一度遊ぶ",()=>chooseSetup()],["閉じる",closeSheet,"g"]]});
+    return;
+  }
+  startIdx=(startIdx+1)%N();      // スタートプレイヤーを次へ
+  showSheet({title:`ラウンド${roundNo} 終了`,
+    body:`手札の残り枚数がシャチチップ（失点）に：<br><br>${lines}`,
+    btns:[["次のラウンドへ",()=>newRound()]]});
+}
+
+/* ================= シート ================= */
+function showSheet({title,body,btns}){
+  $("stitle").textContent=title;
+  $("sbody").innerHTML=body||"";
+  $("sbtns").innerHTML="";
+  for(const [label,fn,cls] of (btns||[])){
+    const b=document.createElement("button");
+    b.className="act"+(cls?" "+cls:""); b.textContent=label;
+    b.onclick=()=>{ closeSheet(); fn&&fn(); };
+    $("sbtns").appendChild(b);
+  }
+  $("veil").classList.add("show");
+}
+function closeSheet(){ $("veil").classList.remove("show"); }
+
+/* ================= 履歴 ================= */
+$("histBtn").onclick=async()=>{
+  if($("veil").classList.contains("show")) return;
+  const h=await loadHistory();
+  if(!h.length){
+    showSheet({title:"対戦履歴",body:`まだ対戦記録がありません。<br><span style="opacity:.6">保存先：${storageMode()}</span>`,
+      btns:[["閉じる",closeSheet,"g"]]});
+    return;
+  }
+  const wins=h.filter(r=>r.win).length;
+  const rows=[...h].reverse().slice(0,15).map(r=>{
+    const dt=new Date(r.t);
+    return `${dt.getMonth()+1}/${dt.getDate()}　${r.n}人・${DIFF_LABEL[r.diff]||"?"}　${r.win?"🏆勝ち":"敗退"}（シャチ${r.orca}）`;
+  }).join("<br>");
+  showSheet({title:"対戦履歴",
+    body:`<b>通算 ${h.length}戦 ${wins}勝</b><br><span style="opacity:.6">保存先：${storageMode()}</span><br><br>${rows}${h.length>15?"<br>…":""}`,
+    btns:[["閉じる",closeSheet,"g"],["履歴を全消去",async()=>{ await clearHistory(); msg("対戦履歴を消去しました"); },"g"]]});
+};
+
+chooseSetup();
+<\/script>
+
+<style>
+#helpveil{position:fixed; inset:0; background:rgba(6,8,12,.9); z-index:200; display:none;
+  align-items:center; justify-content:center; padding:14px;}
+#helpveil.show{display:flex;}
+#helppanel{background:#20242e; color:#f0ecdf; border:2px solid rgba(255,255,255,.25);
+  border-radius:16px; max-width:520px; width:100%; max-height:88vh; display:flex; flex-direction:column;
+  font-family:inherit;}
+#helphead{display:flex; align-items:center; gap:10px; padding:14px 16px 10px; border-bottom:1px solid rgba(255,255,255,.14);}
+#helphead h2{font-size:1rem; font-weight:800; letter-spacing:.06em;}
+#helpbody{padding:12px 16px 16px; overflow-y:auto; text-align:left; font-size:.78rem; line-height:1.85;}
+#helpbody h3{font-size:.8rem; font-weight:800; margin:14px 0 3px; color:#e8c46a; letter-spacing:.04em;}
+#helpbody h3:first-of-type{margin-top:4px;}
+#helpbody p{opacity:.92;}
+#helpbody .hgoal{background:rgba(255,255,255,.08); border-radius:8px; padding:8px 10px; margin-bottom:6px;}
+#helpclose{margin-left:auto; font:inherit; font-weight:800; font-size:.7rem; padding:5px 14px;
+  border-radius:999px; border:1.5px solid rgba(255,255,255,.4); background:transparent; color:#f0ecdf; cursor:pointer;}
+#helpBtn{font:inherit; font-size:.68rem; font-weight:800; padding:4px 12px; border-radius:999px;
+  border:1.5px solid rgba(255,255,255,.4); background:transparent; color:inherit; cursor:pointer;}
+</style>
+
+<div id="helpveil"><div id="helppanel">
+  <div id="helphead"><h2>ぺんぎんの山 — 遊び方</h2><button id="helpclose">閉じる</button></div>
+  <div id="helpbody"></div>
+</div></div>
+<script>
+(function(){
+  var HTML=`<p class="hgoal"><b>目的</b>　手札のペンギンをピラミッドに置いて、いち早く出し切るゲーム。置けずに残った手札がシャチチップ（失点）になります。人数分のラウンドを終えて、失点が最も少ない人の勝ちです。</p><h3>カード</h3><p>5色のペンギンが各7枚、全35枚。色だけが意味を持ちます。</p><h3>ピラミッドを積む</h3><p>手番に手札から1枚をピラミッドに置きます。<br><b>最下段</b>は好きな色を置けます（最大8枚、2人・5人時は7枚）。左から順に埋まります。</p><h3>上の段のルール（重要）</h3><p>上の段に置けるのは、<b>すぐ真下で隣り合う2枚のうち、どちらかと同じ色</b>のときだけです。<br>たとえば下が「赤・青」なら、その上には赤か青しか置けません。<br>土台にない色は、上に積むことができません。</p><h3>置けなくなったら脱落</h3><p>自分の番に、手札のどのカードも置けなくなったら<b>脱落</b>。残った手札の枚数分シャチチップ（失点）を受け取ります。</p><h3>勝敗</h3><p>全員が脱落するか、誰かが出し切るとラウンド終了。人数分のラウンドを行い、<b>シャチチップの合計が最も少ない人</b>の勝ちです。</p><h3>コツ</h3><p>「まだ積める色」「その色の残り枚数」「自分の手札」を見比べるゲームです。<br>自分が多く持つ色を土台に置いて上に伸ばせるようにし、逆に相手が持っていそうな色は土台から締め出すのが基本です。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない各色の枚数を数え、自分の色を通しやすく、相手の色を詰まらせるように置いてきます。</p>`;
   var veil=document.getElementById("helpveil");
   document.getElementById("helpbody").innerHTML=HTML;
   function open(){ veil.classList.add("show"); }
