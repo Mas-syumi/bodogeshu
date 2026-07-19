@@ -187,7 +187,7 @@ document.querySelectorAll(".howto").forEach(el=>{
   el.onclick=e=>{ e.stopPropagation(); showHelp(el.dataset.help); };
 });
 
-const RULES={"nimmt": {"title": "うしのむれ", "html": "<p class=\"hgoal\"><b>目的</b>　牛マーク（🐮）を最も少なく引き取った人の勝ち。誰かが66🐮に達したラウンドで終了です。</p><h3>カード</h3><p>1〜104の数字カード。数字ごとに牛マークの数が違います。<br><b>5の倍数＝🐮2</b> ／ <b>10の倍数＝🐮3</b> ／ <b>11の倍数＝🐮5</b> ／ <b>55＝🐮7</b> ／ それ以外＝🐮1<br>牛マークがそのまま失点です。キリのいい数字ほど危険。</p><h3>流れ</h3><p>場に4つの列があります。全員が手札から1枚を<b>同時に</b>選び、小さい数字の人から順に置いていきます。<br>置く列は選べません。<b>自分の数字より小さく、かつ最も近い数字が末尾にある列</b>に自動的に置かれます。</p><h3>引き取り</h3><p>列は5枚まで。<b>6枚目を置くことになった人が、その列の5枚をすべて引き取ります</b>（＝失点）。<br>引き取ったあと、その列は自分のカード1枚だけになります。</p><h3>どの列にも置けないとき</h3><p>自分のカードが<b>どの列の末尾よりも小さい</b>場合、好きな列を1つ選んで引き取ります。<br>手札に小さい数字を抱え込んでいると、これを強いられます。</p><h3>コツ</h3><p>列が4〜5枚まで伸びていると、次に置いた人が引き取る危険があります。<br>「安い列をわざと引き取って、場をリセットする」のも立派な戦術です。<br>全員同時出しなので、<b>他の人がどの数字を出しそうか</b>を読むゲームです。</p><h3>上級（プロ）ルール</h3><p>ゲーム開始時に選べます。<br>通常は、カードは「末尾が自分より小さく、差が最も近い列」に置かれます。<br><b>プロルールでは、列の先頭（左端）にも置けるようになります</b>。カードより先頭が大きい列なら、その手前に入れられます。<br>置き場所は<b>末尾・先頭を問わず、数値差が最小の場所に自動で決まります</b>（若い数字の人から順に処理）。前置きでその列が<b>6枚目</b>になった人は、通常どおり引き取りです。<br>小さいカードにも置き場所が生まれるぶん、駆け引きが深くなる上級者向けルールです。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない札から相手の手札を推定し（決定化サンプリング）、そこからラウンド終了までを何百回もシミュレーションして、失点の期待値が最小になる札を選びます。<br>すべての可能性を読み切る完全探索ではなく、シミュレーションによる<b>近似</b>です。それでも、単純に「安全そうな列」を選ぶだけのCPU（＝ふつう）と対戦させると、平均失点は 13.2 → 7.6、勝率は 25%（4人戦の基準値）→ 46.7% になります。</p>"}, "gems": {"title": "宝石商", "html": "<p class=\"hgoal\"><b>目的</b>　発展カードで得点を集め、先に15点へ。全員の手番数が揃った時点で集計し、同点ならカード枚数が少ない方の勝ちです。</p><h3>手番でできること（3つのうち1つ）</h3><p><b>① 宝石を取る</b>：違う色を3枚 ／ または同じ色を2枚（山に4枚以上残っている場合のみ）<br><b>② カードを買う</b>：コストを支払って発展カードを購入<br><b>③ カードを確保する</b>：1枚を手元にキープし、金を1枚もらう（最大3枚）</p><h3>ボーナスが雪だるま式に効く</h3><p>買った発展カードは<b>永続の割引</b>になります。白のカードを2枚持っていれば、以後どのカードも白のコストが2つ安くなります。<br>序盤は安いカードでボーナスを増やし、終盤に高得点カードを買うのが基本です。</p><h3>宝石は10枚まで</h3><p>手持ちの宝石が10枚を超えたら超過分を捨てます。取りすぎに注意。</p><h3>貴族</h3><p>上部の貴族タイルは、指定された色のボーナス数を満たすと<b>自動的に訪問し+3点</b>。色を意図的に偏らせる価値があります。</p><h3>金（ワイルド）</h3><p>確保でもらえる金は、どの色の代わりにも使えます。高額カードを買う切り札です。</p><h3>手番順と操作</h3><p>画面上部に<b>手番順</b>が表示されます（金枠が現在の手番）。先手はランダムに決まり、以降その順で時計回りに回ります。<br>宝石をタップして選び「宝石を取る」。同じ宝石を<b>2回タップ</b>で同色2枚になります。金枠のカードは今すぐ買えるカードです。</p><h3>CPUについて</h3><p>つよいCPUは、あなたがあと少しで買えそうな高得点カードを「確保」で横取りしてきます。狙いのカードは早めに押さえましょう。</p>"}, "koibumi": {"title": "恋文", "html": "<p class=\"hgoal\"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークンを1個獲得。<b>先に3個</b>集めた人の勝ちです（第2版の正規ルール）。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。<br>ヘッダーの<b>「内訳」</b>ボタンで、16枚の構成と残り枚数がいつでも確認できます。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、最も強いカードの人が勝ち。同値なら捨て札の合計で比較します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>"}, "hannin": {"title": "踊る容疑者", "html": "<p class=\"hgoal\"><b>目的</b>　犯人カードの持ち主を暴けば探偵側の勝ち。犯人が最後の1枚として犯人カードを出せたら犯人の勝ちです。</p><h3>まず知っておくこと</h3><p><b>犯人は固定されていません。</b>犯人カードは取り引き・うわさ・情報操作で人から人へ移ります。<br>いま持っている人が犯人。さっきまで犯人だった人が今は無関係、ということも普通に起こります。</p><h3>勝ち方は3つ</h3><p><b>① 探偵</b>で犯人カードの持ち主を指名して当てる<br><b>② いぬ</b>で相手の手札から犯人カードを引き当てる<br><b>③ 犯人カードを、手札が最後の1枚になったときに出す</b>（逃げ切り）</p><h3>重要：アリバイ</h3><p>犯人カードを持っていても、<b>アリバイを一緒に持っていれば探偵に指名されても「いいえ」と言えます</b>。<br>逆に、アリバイを持たない犯人は探偵に怯えることになります。</p><h3>主なカード</h3><p><b>探偵</b>：1人を指名（最初の一巡では使用不可） ／ <b>いぬ</b>：1人の手札からランダムに1枚<br><b>目撃者</b>：1人の手札を全部見る ／ <b>少年</b>：いま犯人カードを持つ人を自分だけが知る<br><b>取り引き</b>：1人と1枚ずつ裏向きで交換 ／ <b>うわさ</b>：全員が右隣からランダムに1枚<br><b>情報操作</b>：全員が1枚選んで左隣へ ／ <b>たくらみ</b>：以後、犯人と運命共同体<br><b>アリバイ</b>：持つ限り探偵を否認できる ／ <b>一般人</b>：何も起こらない</p><h3>たくらみの罠</h3><p>たくらみを出した人は犯人の味方です。<b>たくらみ済の人が探偵で犯人を当てても、道連れで負けます</b>。</p><h3>画面の見方</h3><p>上部の<b>円</b>が席順です。あなたは常に下、手番は<b>時計回り</b>に進みます。<br>「うわさ」は<b>右隣（前の手番の人）</b>から引き、「情報操作」は<b>左隣（次の手番の人）</b>へ渡します。<br>あなたが得た情報（見た手札、少年情報、受け取った札、犯人カードが自分に来た警告）は、手札の上のメモ欄に残ります。</p><h3>CPUについて</h3><p>つよいCPUは、犯人カードを渡した相手を記憶し、うわさや取り引きで動くたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>"}, "jackal": {"title": "ジャッカル", "html": "<p class=\"hgoal\"><b>目的</b>　自分のカードだけが見えない状態で「全員の合計以下」の数を宣言し続けるチキンレース。ライフを3回失うと脱落、最後まで残れば勝ちです。</p><h3>自分のカードだけ見えない</h3><p>全員が1枚ずつカードを引き、<b>自分だけ見えないように額に掲げます</b>。<br>他の人のカードは全部見えるので、<b>見えている合計＋自分の未知の1枚</b>を推理することになります。</p><h3>流れ</h3><p>手番の人は、全員の合計以下だと思う数を宣言します。次の人は<b>それより大きい数を宣言</b>するか、「ジャッカル！」と疑うかを選びます。</p><h3>「ジャッカル！」で疑う</h3><p>直前の宣言が合計を<b>超えている</b>と思ったら宣言します。全員がカードを公開して答え合わせ。<br>宣言 > 合計 なら<b>宣言した人</b>がライフを失い、宣言 ≦ 合計 なら<b>疑った人</b>がライフを失います。</p><h3>カード構成（36枚）</h3><p>1〜5が各4枚 ／ 0・10が各3枚 ／ -5・15が各2枚 ／ -10・20が各1枚<br>特殊カードが各1枚：<b>×2</b>（合計を2倍） ／ <b>MAX→0</b>（最大の数字を0にする） ／ <b>夜0</b>（0として扱い、次から山札を作り直す） ／ <b>?</b>（公開時に山札から1枚追加）</p><h3>コツ</h3><p>使ったカードは捨て札に残り、画面下でいつでも見られます。<b>20や-10が既に出ているか</b>を数えれば、自分のカードの見当がつきます。<br>ヘッダーの<b>「内訳」</b>ボタンで、36枚の構成と、どれが既に出たかを一覧できます。<br>また、みんなが妙に高い数を言うなら、あなたが大きい数字を持っている可能性が高いです。</p><h3>CPUについて</h3><p>つよいCPUは捨て札を数え、自分のカードの確率分布から合計の期待値を計算します。時々つり上げのブラフも打ってきます。</p>"}, "gokipoker": {"title": "むしポーカー", "html": "<p class=\"hgoal\"><b>目的</b>　「一人負け」を決めるゲーム。同じ生き物を4枚（2人戦は5枚）引き取るか、8種類すべて引き取るか、手札が尽きて出せなくなった人の負けです。</p><h3>流れ</h3><p>手番の人は手札から1枚を裏向きで誰かに渡し、<b>「これは○○です」と宣言</b>します。<b>本当でも嘘でもOK</b>。</p><h3>受け取った人の選択肢</h3><p><b>①「本当だ」または「嘘だ」と答える</b> → カードを公開。<br>　当てられたら<b>渡した人</b>が引き取り、外したら<b>自分</b>が引き取ります。<br><b>② 覗いて回す</b> → 自分だけカードを確認し、まだ見ていない人に回します。宣言は変えてもOK。<br>　ただし<b>全員が見てしまったら、最後の人は必ず答えなければなりません</b>。</p><h3>引き取ったら</h3><p>そのカードは表向きで自分の前に置かれ、全員に見えます。引き取った人が次の親になります。</p><h3>数えることが最大のコツ</h3><p>各生き物は8枚ずつしかありません。<b>場に見えている枚数＋自分の手札の枚数</b>を数えて、残りが0なら、その宣言は<b>確実に嘘</b>です。<br>ヘッダーの<b>「内訳」</b>ボタンを押すと、この計算を自動でやってくれます。</p><h3>押し付け合いの読み合い</h3><p>相手が3枚集めている生き物を、<b>本当のことを言って</b>渡すのが強力です。相手は怖くて「嘘だ」と言いたくなり、外して引き取ってしまいます。</p><h3>CPUについて</h3><p>つよいCPUは残り枚数を数えて確実な嘘を見抜き、あなたが3枚集めている生き物を狙って押し付けてきます。</p>"}, "kotori": {"title": "ことりならべ", "html": "<p class=\"hgoal\"><b>目的</b>　手札をいち早く出し切る「大富豪」系のゲーム。最後まで残るとペンギンを失い、2個失うと脱落。最後まで生き残れば勝ちです。</p><h3>手札は並べ替えできない</h3><p>配られた手札は<b>並び順を変えられません</b>。この制約がこのゲームの肝です。<br>だから最初はバラバラで、大きな役が作れません。</p><h3>カードの出し方</h3><p>自分の番に、手札からカードを出します。<b>手札で隣り合っている同じ数字は、まとめて出せます</b>（例：3が3枚並んでいれば3枚出し）。<br>場に出ているカードより<b>強い役</b>しか出せません。出せない・出したくないときはパスします。</p><h3>役の強さ</h3><p><b>枚数が多いほど強い</b>（1が2枚 ＞ 7が1枚）。<br><b>同じ枚数なら、数字が大きいほど強い</b>（7が2枚 ＞ 3が2枚）。</p><h3>カードを回収して手札を育てる（重要）</h3><p>手札を強化する方法が2つあります。<br>①<b>カードを出したとき</b>：直前に場にあったカードを「手札に加える」か「捨てる」か選べます。<br>②<b>パスしたとき</b>：山札から1枚引き、「手札に加える」か「捨てる」か選べます。<br>加えるときは絵をタップして同じ数字の隣に差し込み、<b>大きな役を育てられます</b>。並べ替えできないぶん、これが手札を強化する手段です。</p><h3>場が流れる</h3><p>カードを出した人以外の全員がパスをして、再びその人の番が来たら、場のカードは全て捨てられ、その人から好きなカードを出せます。</p><h3>勝敗</h3><p>手札を出し切った人から順に「あがり」。最後まで残った人がペンギンを1個失います。<br>ペンギンを2個失うと脱落。生き残れば勝ちです。</p><h3>CPUについて</h3><p>つよいCPUは、場のカードを回収して手札を育て、大きな役は温存し、終盤に一気に出し切る動きをします。</p>"}, "pengin": {"title": "ぺんぎんの山", "html": "<p class=\"hgoal\"><b>目的</b>　手札のペンギンをピラミッドに置いて、いち早く出し切るゲーム。置けずに残った手札がシャチチップ（失点）になります。人数分のラウンドを終えて、失点が最も少ない人の勝ちです。</p><h3>カード</h3><p>5色のペンギンが各7枚、全35枚。色だけが意味を持ちます。</p><h3>ピラミッドを積む</h3><p>手番に手札から1枚をピラミッドに置きます。<br><b>最下段</b>は好きな色を置けます（最大8枚、2人・5人時は7枚）。左から順に埋まります。</p><h3>上の段のルール（重要）</h3><p>上の段に置けるのは、<b>すぐ真下で隣り合う2枚のうち、どちらかと同じ色</b>のときだけです。<br>たとえば下が「赤・青」なら、その上には赤か青しか置けません。<br>土台にない色は、上に積むことができません。</p><h3>置けなくなったら脱落</h3><p>自分の番に、手札のどのカードも置けなくなったら<b>脱落</b>。残った手札の枚数分シャチチップ（失点）を受け取ります。</p><h3>勝敗</h3><p>全員が脱落するか、誰かが出し切るとラウンド終了。人数分のラウンドを行い、<b>シャチチップの合計が最も少ない人</b>の勝ちです。</p><h3>コツ</h3><p>「まだ積める色」「その色の残り枚数」「自分の手札」を見比べるゲームです。<br>自分が多く持つ色を土台に置いて上に伸ばせるようにし、逆に相手が持っていそうな色は土台から締め出すのが基本です。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない各色の枚数を数え、自分の色を通しやすく、相手の色を詰まらせるように置いてきます。</p>"}};
+const RULES={"nimmt": {"title": "うしのむれ", "html": "<p class=\"hgoal\"><b>目的</b>　牛マーク（🐮）を最も少なく引き取った人の勝ち。誰かが66🐮に達したラウンドで終了です。</p><h3>カード</h3><p>1〜104の数字カード。数字ごとに牛マークの数が違います。<br><b>5の倍数＝🐮2</b> ／ <b>10の倍数＝🐮3</b> ／ <b>11の倍数＝🐮5</b> ／ <b>55＝🐮7</b> ／ それ以外＝🐮1<br>牛マークがそのまま失点です。キリのいい数字ほど危険。</p><h3>流れ</h3><p>場に4つの列があります。全員が手札から1枚を<b>同時に</b>選び、小さい数字の人から順に置いていきます。<br>置く列は選べません。<b>自分の数字より小さく、かつ最も近い数字が末尾にある列</b>に自動的に置かれます。</p><h3>引き取り</h3><p>列は5枚まで。<b>6枚目を置くことになった人が、その列の5枚をすべて引き取ります</b>（＝失点）。<br>引き取ったあと、その列は自分のカード1枚だけになります。</p><h3>どの列にも置けないとき</h3><p>自分のカードが<b>どの列の末尾よりも小さい</b>場合、好きな列を1つ選んで引き取ります。<br>手札に小さい数字を抱え込んでいると、これを強いられます。</p><h3>コツ</h3><p>列が4〜5枚まで伸びていると、次に置いた人が引き取る危険があります。<br>「安い列をわざと引き取って、場をリセットする」のも立派な戦術です。<br>全員同時出しなので、<b>他の人がどの数字を出しそうか</b>を読むゲームです。</p><h3>上級（プロ）ルール</h3><p>ゲーム開始時に選べます。<br>通常は、カードは「末尾が自分より小さく、差が最も近い列」に置かれます。<br><b>プロルールでは、列の先頭（左端）にも置けるようになります</b>。カードより先頭が大きい列なら、その手前に入れられます。<br>置き場所は<b>末尾・先頭を問わず、数値差が最小の場所に自動で決まります</b>（若い数字の人から順に処理）。前置きでその列が<b>6枚目</b>になった人は、通常どおり引き取りです。<br>小さいカードにも置き場所が生まれるぶん、駆け引きが深くなる上級者向けルールです。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない札から相手の手札を推定し（決定化サンプリング）、そこからラウンド終了までを何百回もシミュレーションして、失点の期待値が最小になる札を選びます。<br>すべての可能性を読み切る完全探索ではなく、シミュレーションによる<b>近似</b>です。それでも、単純に「安全そうな列」を選ぶだけのCPU（＝ふつう）と対戦させると、平均失点は 13.2 → 7.6、勝率は 25%（4人戦の基準値）→ 46.7% になります。</p>"}, "gems": {"title": "宝石商", "html": "<p class=\"hgoal\"><b>目的</b>　発展カードで得点を集め、先に15点へ。全員の手番数が揃った時点で集計し、同点ならカード枚数が少ない方の勝ちです。</p><h3>手番でできること（3つのうち1つ）</h3><p><b>① 宝石を取る</b>：違う色を3枚 ／ または同じ色を2枚（山に4枚以上残っている場合のみ）<br><b>② カードを買う</b>：コストを支払って発展カードを購入<br><b>③ カードを確保する</b>：1枚を手元にキープし、金を1枚もらう（最大3枚）</p><h3>ボーナスが雪だるま式に効く</h3><p>買った発展カードは<b>永続の割引</b>になります。白のカードを2枚持っていれば、以後どのカードも白のコストが2つ安くなります。<br>序盤は安いカードでボーナスを増やし、終盤に高得点カードを買うのが基本です。</p><h3>宝石は10枚まで</h3><p>手持ちの宝石が10枚を超えたら超過分を捨てます。取りすぎに注意。</p><h3>貴族</h3><p>上部の貴族タイルは、指定された色のボーナス数を満たすと<b>自動的に訪問し+3点</b>。色を意図的に偏らせる価値があります。</p><h3>金（ワイルド）</h3><p>確保でもらえる金は、どの色の代わりにも使えます。高額カードを買う切り札です。</p><h3>手番順と操作</h3><p>画面上部に<b>手番順</b>が表示されます（金枠が現在の手番）。先手はランダムに決まり、以降その順で時計回りに回ります。<br>宝石をタップして選び「宝石を取る」。同じ宝石を<b>2回タップ</b>で同色2枚になります。金枠のカードは今すぐ買えるカードです。</p><h3>CPUについて</h3><p>つよいCPUは、あなたがあと少しで買えそうな高得点カードを「確保」で横取りしてきます。狙いのカードは早めに押さえましょう。</p>"}, "koibumi": {"title": "恋文", "html": "<p class=\"hgoal\"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークンを1個獲得。<b>先に3個</b>集めた人の勝ちです（第2版の正規ルール）。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。<br>ヘッダーの<b>「内訳」</b>ボタンで、16枚の構成と残り枚数がいつでも確認できます。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、<b>最も強いカードの人が勝ち</b>。<br>同じ数字で並んだ場合は<b>引き分け</b>となり、その全員がトークンを獲得します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>"}, "hannin": {"title": "踊る容疑者", "html": "<p class=\"hgoal\"><b>目的</b>　犯人カードの持ち主を暴けば探偵側の勝ち。犯人が最後の1枚として犯人カードを出せたら犯人の勝ちです。</p><h3>まず知っておくこと</h3><p><b>犯人は固定されていません。</b>犯人カードは取り引き・うわさ・情報操作で人から人へ移ります。<br>いま持っている人が犯人。さっきまで犯人だった人が今は無関係、ということも普通に起こります。</p><h3>勝ち方は3つ</h3><p><b>① 探偵</b>で犯人カードの持ち主を指名して当てる<br><b>② いぬ</b>で相手の手札から犯人カードを引き当てる<br><b>③ 犯人カードを、手札が最後の1枚になったときに出す</b>（逃げ切り）</p><h3>重要：アリバイ</h3><p>犯人カードを持っていても、<b>アリバイを一緒に持っていれば探偵に指名されても「いいえ」と言えます</b>。<br>逆に、アリバイを持たない犯人は探偵に怯えることになります。</p><h3>主なカード</h3><p><b>探偵</b>：1人を指名（最初の一巡では使用不可） ／ <b>いぬ</b>：1人の手札からランダムに1枚<br><b>目撃者</b>：1人の手札を全部見る ／ <b>少年</b>：いま犯人カードを持つ人を自分だけが知る<br><b>取り引き</b>：1人と1枚ずつ裏向きで交換 ／ <b>うわさ</b>：全員が右隣からランダムに1枚<br><b>情報操作</b>：全員が1枚選んで左隣へ ／ <b>たくらみ</b>：以後、犯人と運命共同体<br><b>アリバイ</b>：持つ限り探偵を否認できる ／ <b>一般人</b>：何も起こらない</p><h3>たくらみの罠</h3><p>たくらみを出した人は犯人の味方です。<b>たくらみ済の人が探偵で犯人を当てても、道連れで負けます</b>。</p><h3>画面の見方</h3><p>上部の<b>円</b>が席順です。あなたは常に下、手番は<b>時計回り</b>に進みます。<br>「うわさ」は<b>右隣（前の手番の人）</b>から引き、「情報操作」は<b>左隣（次の手番の人）</b>へ渡します。<br>あなたが得た情報（見た手札、少年情報、受け取った札、犯人カードが自分に来た警告）は、手札の上のメモ欄に残ります。</p><h3>CPUについて</h3><p>つよいCPUは、犯人カードを渡した相手を記憶し、うわさや取り引きで動くたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>"}, "jackal": {"title": "ジャッカル", "html": "<p class=\"hgoal\"><b>目的</b>　自分のカードだけが見えない状態で「全員の合計以下」の数を宣言し続けるチキンレース。ライフを3回失うと脱落、最後まで残れば勝ちです。</p><h3>自分のカードだけ見えない</h3><p>全員が1枚ずつカードを引き、<b>自分だけ見えないように額に掲げます</b>。<br>他の人のカードは全部見えるので、<b>見えている合計＋自分の未知の1枚</b>を推理することになります。</p><h3>流れ</h3><p>手番の人は、全員の合計以下だと思う数を宣言します。次の人は<b>それより大きい数を宣言</b>するか、「ジャッカル！」と疑うかを選びます。</p><h3>「ジャッカル！」で疑う</h3><p>直前の宣言が合計を<b>超えている</b>と思ったら宣言します。全員がカードを公開して答え合わせ。<br>宣言 > 合計 なら<b>宣言した人</b>がライフを失い、宣言 ≦ 合計 なら<b>疑った人</b>がライフを失います。</p><h3>カード構成（36枚）</h3><p>1〜5が各4枚 ／ 0・10が各3枚 ／ -5・15が各2枚 ／ -10・20が各1枚<br>特殊カードが各1枚：<b>×2</b>（合計を2倍） ／ <b>MAX→0</b>（最大の数字を0にする） ／ <b>夜0</b>（0として扱い、次から山札を作り直す） ／ <b>?</b>（公開時に山札から1枚追加）</p><h3>コツ</h3><p>使ったカードは捨て札に残り、画面下でいつでも見られます。<b>20や-10が既に出ているか</b>を数えれば、自分のカードの見当がつきます。<br>ヘッダーの<b>「内訳」</b>ボタンで、36枚の構成と、どれが既に出たかを一覧できます。<br>また、みんなが妙に高い数を言うなら、あなたが大きい数字を持っている可能性が高いです。</p><h3>CPUについて</h3><p>つよいCPUは捨て札を数え、自分のカードの確率分布から合計の期待値を計算します。時々つり上げのブラフも打ってきます。</p>"}, "gokipoker": {"title": "むしポーカー", "html": "<p class=\"hgoal\"><b>目的</b>　「一人負け」を決めるゲーム。同じ生き物を4枚（2人戦は5枚）引き取るか、8種類すべて引き取るか、手札が尽きて出せなくなった人の負けです。</p><h3>流れ</h3><p>手番の人は手札から1枚を裏向きで誰かに渡し、<b>「これは○○です」と宣言</b>します。<b>本当でも嘘でもOK</b>。</p><h3>受け取った人の選択肢</h3><p><b>①「本当だ」または「嘘だ」と答える</b> → カードを公開。<br>　当てられたら<b>渡した人</b>が引き取り、外したら<b>自分</b>が引き取ります。<br><b>② 覗いて回す</b> → 自分だけカードを確認し、まだ見ていない人に回します。宣言は変えてもOK。<br>　ただし<b>全員が見てしまったら、最後の人は必ず答えなければなりません</b>。</p><h3>引き取ったら</h3><p>そのカードは表向きで自分の前に置かれ、全員に見えます。引き取った人が次の親になります。</p><h3>数えることが最大のコツ</h3><p>各生き物は8枚ずつしかありません。<b>場に見えている枚数＋自分の手札の枚数</b>を数えて、残りが0なら、その宣言は<b>確実に嘘</b>です。<br>ヘッダーの<b>「内訳」</b>ボタンを押すと、この計算を自動でやってくれます。</p><h3>押し付け合いの読み合い</h3><p>相手が3枚集めている生き物を、<b>本当のことを言って</b>渡すのが強力です。相手は怖くて「嘘だ」と言いたくなり、外して引き取ってしまいます。</p><h3>CPUについて</h3><p>つよいCPUは残り枚数を数えて確実な嘘を見抜き、あなたが3枚集めている生き物を狙って押し付けてきます。</p>"}, "kotori": {"title": "ことりならべ", "html": "<p class=\"hgoal\"><b>目的</b>　手札をいち早く出し切る「大富豪」系のゲーム。最後まで残るとペンギンを失い、2個失うと脱落。最後まで生き残れば勝ちです。</p><h3>手札は並べ替えできない</h3><p>配られた手札は<b>並び順を変えられません</b>。この制約がこのゲームの肝です。<br>だから最初はバラバラで、大きな役が作れません。</p><h3>カードの出し方</h3><p>自分の番に、手札からカードを出します。<b>手札で隣り合っている同じ数字は、まとめて出せます</b>（例：3が3枚並んでいれば3枚出し）。<br>場に出ているカードより<b>強い役</b>しか出せません。出せない・出したくないときはパスします。</p><h3>役の強さ</h3><p><b>枚数が多いほど強い</b>（1が2枚 ＞ 7が1枚）。<br><b>同じ枚数なら、数字が大きいほど強い</b>（7が2枚 ＞ 3が2枚）。</p><h3>カードを回収して手札を育てる（重要）</h3><p>手札を強化する方法が2つあります。<br>①<b>カードを出したとき</b>：直前に場にあったカードを「手札に加える」か「捨てる」か選べます。<br>②<b>パスしたとき</b>：山札から1枚引き、「手札に加える」か「捨てる」か選べます。<br>加えるときは絵をタップして同じ数字の隣に差し込み、<b>大きな役を育てられます</b>。並べ替えできないぶん、これが手札を強化する手段です。</p><h3>場が流れる</h3><p>カードを出した人以外の全員がパスをして、再びその人の番が来たら、場のカードは全て捨てられ、その人から好きなカードを出せます。</p><h3>勝敗</h3><p>手札を出し切った人から順に「あがり」。最後まで残った人がペンギンを1個失います。<br>ペンギンを2個失うと脱落。生き残れば勝ちです。</p><h3>CPUについて</h3><p>つよいCPUは、場のカードを回収して手札を育て、大きな役は温存し、終盤に一気に出し切る動きをします。</p>"}, "pengin": {"title": "ぺんぎんの山", "html": "<p class=\"hgoal\"><b>目的</b>　手札のペンギンをピラミッドに置いて、いち早く出し切るゲーム。置けずに残った手札がシャチチップ（失点）になります。人数分のラウンドを終えて、失点が最も少ない人の勝ちです。</p><h3>カード</h3><p>5色のペンギンが各7枚、全35枚。色だけが意味を持ちます。</p><h3>ピラミッドを積む</h3><p>手番に手札から1枚をピラミッドに置きます。<br><b>最下段</b>は好きな色を置けます（最大8枚、2人・5人時は7枚）。左から順に埋まります。</p><h3>上の段のルール（重要）</h3><p>上の段に置けるのは、<b>すぐ真下で隣り合う2枚のうち、どちらかと同じ色</b>のときだけです。<br>たとえば下が「赤・青」なら、その上には赤か青しか置けません。<br>土台にない色は、上に積むことができません。</p><h3>置けなくなったら脱落</h3><p>自分の番に、手札のどのカードも置けなくなったら<b>脱落</b>。残った手札の枚数分シャチチップ（失点）を受け取ります。</p><h3>勝敗</h3><p>全員が脱落するか、誰かが出し切るとラウンド終了。人数分のラウンドを行い、<b>シャチチップの合計が最も少ない人</b>の勝ちです。</p><h3>コツ</h3><p>「まだ積める色」「その色の残り枚数」「自分の手札」を見比べるゲームです。<br>自分が多く持つ色を土台に置いて上に伸ばせるようにし、逆に相手が持っていそうな色は土台から締め出すのが基本です。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない各色の枚数を数え、自分の色を通しやすく、相手の色を詰まらせるように置いてきます。</p>"}};
 function showHelp(id){
   const r=RULES[id];
   document.getElementById("helptitle").textContent=r.title+" — 遊び方";
@@ -341,7 +341,8 @@ $("back").onclick=()=>{
   .pl .pick.face{visibility:visible; border:2px solid rgba(0,0,0,.25);}
 
   /* ---- rows ---- */
-  #rows{padding:6px 12px; display:flex; flex-direction:column; gap:7px; flex:0 0 auto;}
+  #rows{padding:6px 12px; display:flex; flex-direction:column; gap:7px; flex:0 0 auto;
+    max-width:560px; width:100%; margin:0 auto;}
   .row{
     display:grid; grid-template-columns:repeat(6,1fr) auto; gap:5px;
     background:rgba(0,0,0,.18); border-radius:12px; padding:6px;
@@ -478,6 +479,75 @@ html[data-theme="light"] #sheet .act.g,
 html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
 html[data-theme="light"] #veil,
 html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
+
+/* ライトモード共通：白系の枠・薄文字・薄背景が明るい地に埋もれるのを防ぐ */
+html[data-theme="light"] [class*="slot"],
+html[data-theme="light"] .cell.empty,
+html[data-theme="light"] .empty{
+  border-color:rgba(0,0,0,.28) !important;
+  background:rgba(0,0,0,.05) !important;
+}
+html[data-theme="light"] .cell.slot{
+  border-color:#b8860b !important; background:rgba(224,178,74,.32) !important;
+}
+
+
+/* うしのむれ：ライトモードの盤面色 */
+html[data-theme="light"]{
+  --felt:#cfe5d8; --felt-dark:#b3d3c1; --ivory:#2b3a33; --ink:#2b2119;
+}
+html[data-theme="light"] body{
+  background:radial-gradient(ellipse at 50% -20%, #e2f1e8 0%, var(--felt) 55%, var(--felt-dark) 100%);
+  color:#24312b;
+}
+html[data-theme="light"] #status, html[data-theme="light"] #msg,
+html[data-theme="light"] #hint, html[data-theme="light"] .name,
+html[data-theme="light"] .score, html[data-theme="light"] #scores,
+html[data-theme="light"] h1, html[data-theme="light"] .sub{ color:#24312b; }
+html[data-theme="light"] .row{ background:rgba(0,0,0,.05); border-color:rgba(0,0,0,.18); }
+html[data-theme="light"] .slot{ border-color:rgba(0,0,0,.22); background:rgba(0,0,0,.04); }
+html[data-theme="light"] .slot.six{ border-color:#b8860b; background:rgba(224,178,74,.28); }
+html[data-theme="light"] .rowheads{ color:#3a2f22; }
+html[data-theme="light"] #overlay{ background:rgba(240,238,230,.88); }
+html[data-theme="light"] #panel{ background:#f7f4ec; color:#24312b; border-color:rgba(0,0,0,.2); }
+html[data-theme="light"] #ptitle, html[data-theme="light"] #plines{ color:#24312b; }
+html[data-theme="light"] #plines b{ color:#7a5c10; }
+
+
+/* PC（広い画面）で間延びしないよう、主要ブロックに最大幅を設ける */
+#status, #msg, #hint, #scores, #hand, #handwrap, header, #bottom{
+  max-width:560px; width:100%; margin-left:auto; margin-right:auto;
+}
+
+
+
+
+/* ライトモード：薄すぎるゴーストボタン（閉じる・やめる等）を読める濃さに */
+html[data-theme="light"] button.act.ghost,
+html[data-theme="light"] button.act.g,
+html[data-theme="light"] .act.ghost,
+html[data-theme="light"] .act.g{
+  color:#26313a !important;
+  border-color:rgba(0,0,0,.45) !important;
+  opacity:1 !important;
+}
+
+
+/* ライトモード：ダイアログ内の説明文・補足テキストを読める濃さに */
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #sheet .body *,
+html[data-theme="light"] #sbody, html[data-theme="light"] #sbody *,
+html[data-theme="light"] #plines, html[data-theme="light"] #plines *{
+  color:#26313a;
+}
+html[data-theme="light"] #sheet .body b,
+html[data-theme="light"] #sbody b, html[data-theme="light"] #plines b{ color:#7a5c10; }
+/* 透明度で薄くしている補足は、ライトでは色で濃淡をつける */
+html[data-theme="light"] #sbody span[style*="opacity"],
+html[data-theme="light"] #sheet .body span[style*="opacity"]{
+  opacity:1 !important; color:rgba(38,49,58,.72) !important;
+}
 
 </style>
 </head>
@@ -1204,7 +1274,10 @@ chooseSetup();
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     font-size:.62rem; font-weight:800; gap:2px;
     border:2px solid rgba(255,255,255,.25);
+    color:#fff;                       /* 山札は常に濃色なので文字は白固定 */
+    text-shadow:0 1px 2px rgba(0,0,0,.5);
   }
+  .deckback span{ font-size:.58rem; opacity:.95; }
   .cards4{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; flex:1;}
   .gcard{
     border-radius:9px; padding:5px 6px; cursor:pointer; position:relative;
@@ -1316,6 +1389,63 @@ html[data-theme="light"] #sheet .act.g,
 html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
 html[data-theme="light"] #veil,
 html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
+
+/* ライトモード共通：白系の枠・薄文字・薄背景が明るい地に埋もれるのを防ぐ */
+html[data-theme="light"] [class*="slot"],
+html[data-theme="light"] .cell.empty,
+html[data-theme="light"] .empty{
+  border-color:rgba(0,0,0,.28) !important;
+  background:rgba(0,0,0,.05) !important;
+}
+html[data-theme="light"] .cell.slot{
+  border-color:#b8860b !important; background:rgba(224,178,74,.32) !important;
+}
+
+
+/* 白（クリーム色）が明るい背景で見えなくなるのを防ぐ：常に輪郭を付ける */
+.cw, .circ.cw, .costdot.cw, .gemrow .cw, .noble .req .cw{
+  box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.35);
+}
+html[data-theme="light"] .cw,
+html[data-theme="light"] .circ.cw,
+html[data-theme="light"] .costdot.cw{
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.5);
+}
+/* ライトモード：ダイアログのゴースト系ボタン（閉じる等）を読める濃さに */
+html[data-theme="light"] #sheet .act.g,
+html[data-theme="light"] #sheet button[style*="transparent"],
+html[data-theme="light"] .act.g{
+  color:#26313a !important; border-color:rgba(0,0,0,.45) !important; opacity:1 !important;
+}
+html[data-theme="light"] #panel button, html[data-theme="light"] #sbtns button{ opacity:1; }
+
+
+/* ライトモード：薄すぎるゴーストボタン（閉じる・やめる等）を読める濃さに */
+html[data-theme="light"] button.act.ghost,
+html[data-theme="light"] button.act.g,
+html[data-theme="light"] .act.ghost,
+html[data-theme="light"] .act.g{
+  color:#26313a !important;
+  border-color:rgba(0,0,0,.45) !important;
+  opacity:1 !important;
+}
+
+
+/* ライトモード：ダイアログ内の説明文・補足テキストを読める濃さに */
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #sheet .body *,
+html[data-theme="light"] #sbody, html[data-theme="light"] #sbody *,
+html[data-theme="light"] #plines, html[data-theme="light"] #plines *{
+  color:#26313a;
+}
+html[data-theme="light"] #sheet .body b,
+html[data-theme="light"] #sbody b, html[data-theme="light"] #plines b{ color:#7a5c10; }
+/* 透明度で薄くしている補足は、ライトでは色で濃淡をつける */
+html[data-theme="light"] #sbody span[style*="opacity"],
+html[data-theme="light"] #sheet .body span[style*="opacity"]{
+  opacity:1 !important; color:rgba(38,49,58,.72) !important;
+}
 
 </style>
 </head>
@@ -2110,6 +2240,52 @@ html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; borde
 html[data-theme="light"] #veil,
 html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
 
+
+/* ライトモード共通：白系の枠・薄文字・薄背景が明るい地に埋もれるのを防ぐ */
+html[data-theme="light"] [class*="slot"],
+html[data-theme="light"] .cell.empty,
+html[data-theme="light"] .empty{
+  border-color:rgba(0,0,0,.28) !important;
+  background:rgba(0,0,0,.05) !important;
+}
+html[data-theme="light"] .cell.slot{
+  border-color:#b8860b !important; background:rgba(224,178,74,.32) !important;
+}
+
+
+
+
+/* ライトモード：薄すぎるゴーストボタン（閉じる・やめる等）を読める濃さに */
+html[data-theme="light"] button.act.ghost,
+html[data-theme="light"] button.act.g,
+html[data-theme="light"] .act.ghost,
+html[data-theme="light"] .act.g{
+  color:#26313a !important;
+  border-color:rgba(0,0,0,.45) !important;
+  opacity:1 !important;
+}
+
+
+/* ライトモード：ダイアログ内の説明文・補足テキストを読める濃さに */
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #sheet .body *,
+html[data-theme="light"] #sbody, html[data-theme="light"] #sbody *,
+html[data-theme="light"] #plines, html[data-theme="light"] #plines *{
+  color:#26313a;
+}
+html[data-theme="light"] #sheet .body b,
+html[data-theme="light"] #sbody b, html[data-theme="light"] #plines b{ color:#7a5c10; }
+/* 透明度で薄くしている補足は、ライトでは色で濃淡をつける */
+html[data-theme="light"] #sbody span[style*="opacity"],
+html[data-theme="light"] #sheet .body span[style*="opacity"]{
+  opacity:1 !important; color:rgba(38,49,58,.72) !important;
+}
+
+
+/* カード内の説明文をもう少し読みやすく（カード地は常にクリーム色） */
+#sheet .peek .ds{ opacity:1; color:rgba(58,37,48,.9); }
+.bigcard .ds{ opacity:1; color:rgba(58,37,48,.88); }
+
 </style>
 </head>
 <body>
@@ -2656,36 +2832,37 @@ function cpuChoose(pi){
 async function showdown(){
   const alive=aliveIdx();
   const lines=alive.map(i=>`${players[i].name}：${CARDS[players[i].hand[0]].n}（${players[i].hand[0]}）`);
-  let win=alive[0];
-  for(const i of alive){
-    const hv=players[i].hand[0], wv=players[win].hand[0];
-    if(hv>wv) win=i;
-    else if(hv===wv){
-      const s=p=>p.disc.reduce((x,y)=>x+y,0);
-      if(s(players[i])>s(players[win])) win=i;
-    }
-  }
+  // 最も強いカードを持つ人が勝ち。同値なら全員が勝者（正規ルール）
+  const best=Math.max(...alive.map(i=>players[i].hand[0]));
+  const winners=alive.filter(i=>players[i].hand[0]===best);
   await new Promise(res=>showSheet({title:"山札切れ — 手札公開",center:true,
-    body:lines.join("<br>"),btns:[["結果へ",res]]}));
-  endRound(win);
+    body:lines.join("<br>")+(winners.length>1?`<br><br><b>同じ数字で引き分け</b>：${winners.map(i=>players[i].name).join("・")} が同時に獲得`:""),
+    btns:[["結果へ",res]]}));
+  endRound(winners);
 }
-function endRound(winIdx){
-  const w=players[winIdx];
-  w.tokens++;
+/* winners: 勝者インデックスの配列（引き分けなら複数） */
+function endRound(winners){
+  if(!Array.isArray(winners)) winners=[winners];
+  for(const i of winners) players[i].tokens++;
   renderAll();
-  if(w.tokens>=tokenGoal){
+  const reached=players.filter(p=>p.tokens>=tokenGoal);
+  if(reached.length){
     over=true;
+    const meWin=reached.includes(players[0]);
     saveRecord({t:Date.now(), n:players.length, diff:diffLevel,
-      win:winIdx===0, tokens:players.map(p=>p.tokens), rank:[...players].sort((a,b)=>b.tokens-a.tokens).indexOf(players[0])+1});
-    showSheet({title: winIdx===0?"💌 あなたの勝ち！":`${w.name} の勝ち！`, center:true,
+      win:meWin, tokens:players.map(p=>p.tokens), rank:[...players].sort((a,b)=>b.tokens-a.tokens).indexOf(players[0])+1});
+    showSheet({title: meWin?"💌 あなたの勝ち！":`${reached.map(p=>p.name).join("・")} の勝ち！`, center:true,
       body:players.map(p=>`${p===players[0]?"<b>":""}${p.name}：♥${p.tokens}${p===players[0]?"</b>":""}`).join("<br>"),
       btns:[["もう一度遊ぶ",()=>chooseSetup()],["閉じる",closeSheet,true]]});
     return;
   }
-  showSheet({title:`ラウンド${roundNo}：${winIdx===0?"あなた":w.name} の勝ち`, center:true,
+  const title = winners.length>1
+    ? `ラウンド${roundNo}：引き分け（${winners.map(i=>players[i].name).join("・")}）`
+    : `ラウンド${roundNo}：${winners[0]===0?"あなた":players[winners[0]].name} の勝ち`;
+  showSheet({title, center:true,
     body:players.map(p=>`${p===players[0]?"<b>":""}${p.name}：♥${p.tokens}${p===players[0]?"</b>":""}`).join("<br>")
       +`<br><br>次のラウンドは勝者から`,
-    btns:[["次のラウンドへ",()=>newRound(winIdx)]]});
+    btns:[["次のラウンドへ",()=>newRound(winners[0])]]});
 }
 
 /* ================= history view ================= */
@@ -2746,6 +2923,7 @@ chooseSetup();
 
 
 
+
 <style>
 #helpveil{position:fixed; inset:0; background:rgba(6,8,12,.9); z-index:200; display:none;
   align-items:center; justify-content:center; padding:14px;}
@@ -2772,7 +2950,7 @@ chooseSetup();
 </div></div>
 <script>
 (function(){
-  var HTML=`<p class="hgoal"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークンを1個獲得。<b>先に3個</b>集めた人の勝ちです（第2版の正規ルール）。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。<br>ヘッダーの<b>「内訳」</b>ボタンで、16枚の構成と残り枚数がいつでも確認できます。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、最も強いカードの人が勝ち。同値なら捨て札の合計で比較します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>`;
+  var HTML=`<p class="hgoal"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークンを1個獲得。<b>先に3個</b>集めた人の勝ちです（第2版の正規ルール）。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。<br>ヘッダーの<b>「内訳」</b>ボタンで、16枚の構成と残り枚数がいつでも確認できます。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、<b>最も強いカードの人が勝ち</b>。<br>同じ数字で並んだ場合は<b>引き分け</b>となり、その全員がトークンを獲得します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>`;
   var veil=document.getElementById("helpveil");
   document.getElementById("helpbody").innerHTML=HTML;
   function open(){ veil.classList.add("show"); }
@@ -2781,22 +2959,6 @@ chooseSetup();
   document.getElementById("helpclose").onclick=close;
   veil.onclick=function(e){ if(e.target===veil) close(); };
   window.openHelp=open;
-})();
-<\/script>
-
-
-<script>
-/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
-(function(){
-  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
-  var t=null;
-  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
-  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
-  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
-  apply(t);
-  window.addEventListener("message", function(ev){
-    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
-  });
 })();
 <\/script>
 
@@ -2962,6 +3124,47 @@ html[data-theme="light"] #sheet .act.g,
 html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
 html[data-theme="light"] #veil,
 html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
+
+/* ライトモード共通：白系の枠・薄文字・薄背景が明るい地に埋もれるのを防ぐ */
+html[data-theme="light"] [class*="slot"],
+html[data-theme="light"] .cell.empty,
+html[data-theme="light"] .empty{
+  border-color:rgba(0,0,0,.28) !important;
+  background:rgba(0,0,0,.05) !important;
+}
+html[data-theme="light"] .cell.slot{
+  border-color:#b8860b !important; background:rgba(224,178,74,.32) !important;
+}
+
+
+
+
+/* ライトモード：薄すぎるゴーストボタン（閉じる・やめる等）を読める濃さに */
+html[data-theme="light"] button.act.ghost,
+html[data-theme="light"] button.act.g,
+html[data-theme="light"] .act.ghost,
+html[data-theme="light"] .act.g{
+  color:#26313a !important;
+  border-color:rgba(0,0,0,.45) !important;
+  opacity:1 !important;
+}
+
+
+/* ライトモード：ダイアログ内の説明文・補足テキストを読める濃さに */
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #sheet .body *,
+html[data-theme="light"] #sbody, html[data-theme="light"] #sbody *,
+html[data-theme="light"] #plines, html[data-theme="light"] #plines *{
+  color:#26313a;
+}
+html[data-theme="light"] #sheet .body b,
+html[data-theme="light"] #sbody b, html[data-theme="light"] #plines b{ color:#7a5c10; }
+/* 透明度で薄くしている補足は、ライトでは色で濃淡をつける */
+html[data-theme="light"] #sbody span[style*="opacity"],
+html[data-theme="light"] #sheet .body span[style*="opacity"]{
+  opacity:1 !important; color:rgba(38,49,58,.72) !important;
+}
 
 </style>
 </head>
@@ -3925,6 +4128,47 @@ html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; borde
 html[data-theme="light"] #veil,
 html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
 
+
+/* ライトモード共通：白系の枠・薄文字・薄背景が明るい地に埋もれるのを防ぐ */
+html[data-theme="light"] [class*="slot"],
+html[data-theme="light"] .cell.empty,
+html[data-theme="light"] .empty{
+  border-color:rgba(0,0,0,.28) !important;
+  background:rgba(0,0,0,.05) !important;
+}
+html[data-theme="light"] .cell.slot{
+  border-color:#b8860b !important; background:rgba(224,178,74,.32) !important;
+}
+
+
+
+
+/* ライトモード：薄すぎるゴーストボタン（閉じる・やめる等）を読める濃さに */
+html[data-theme="light"] button.act.ghost,
+html[data-theme="light"] button.act.g,
+html[data-theme="light"] .act.ghost,
+html[data-theme="light"] .act.g{
+  color:#26313a !important;
+  border-color:rgba(0,0,0,.45) !important;
+  opacity:1 !important;
+}
+
+
+/* ライトモード：ダイアログ内の説明文・補足テキストを読める濃さに */
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #sheet .body *,
+html[data-theme="light"] #sbody, html[data-theme="light"] #sbody *,
+html[data-theme="light"] #plines, html[data-theme="light"] #plines *{
+  color:#26313a;
+}
+html[data-theme="light"] #sheet .body b,
+html[data-theme="light"] #sbody b, html[data-theme="light"] #plines b{ color:#7a5c10; }
+/* 透明度で薄くしている補足は、ライトでは色で濃淡をつける */
+html[data-theme="light"] #sbody span[style*="opacity"],
+html[data-theme="light"] #sheet .body span[style*="opacity"]{
+  opacity:1 !important; color:rgba(38,49,58,.72) !important;
+}
+
 </style>
 </head>
 <body>
@@ -4637,6 +4881,47 @@ html[data-theme="light"] #sheet .act.g,
 html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
 html[data-theme="light"] #veil,
 html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
+
+/* ライトモード共通：白系の枠・薄文字・薄背景が明るい地に埋もれるのを防ぐ */
+html[data-theme="light"] [class*="slot"],
+html[data-theme="light"] .cell.empty,
+html[data-theme="light"] .empty{
+  border-color:rgba(0,0,0,.28) !important;
+  background:rgba(0,0,0,.05) !important;
+}
+html[data-theme="light"] .cell.slot{
+  border-color:#b8860b !important; background:rgba(224,178,74,.32) !important;
+}
+
+
+
+
+/* ライトモード：薄すぎるゴーストボタン（閉じる・やめる等）を読める濃さに */
+html[data-theme="light"] button.act.ghost,
+html[data-theme="light"] button.act.g,
+html[data-theme="light"] .act.ghost,
+html[data-theme="light"] .act.g{
+  color:#26313a !important;
+  border-color:rgba(0,0,0,.45) !important;
+  opacity:1 !important;
+}
+
+
+/* ライトモード：ダイアログ内の説明文・補足テキストを読める濃さに */
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #sheet .body *,
+html[data-theme="light"] #sbody, html[data-theme="light"] #sbody *,
+html[data-theme="light"] #plines, html[data-theme="light"] #plines *{
+  color:#26313a;
+}
+html[data-theme="light"] #sheet .body b,
+html[data-theme="light"] #sbody b, html[data-theme="light"] #plines b{ color:#7a5c10; }
+/* 透明度で薄くしている補足は、ライトでは色で濃淡をつける */
+html[data-theme="light"] #sbody span[style*="opacity"],
+html[data-theme="light"] #sheet .body span[style*="opacity"]{
+  opacity:1 !important; color:rgba(38,49,58,.72) !important;
+}
 
 </style>
 </head>
@@ -5381,6 +5666,14 @@ chooseSetup();
     border-color:var(--gold); border-style:solid; color:var(--gold);
     background:rgba(224,178,74,.18);
   }
+  /* ライトモード：明るい背景でも＋が見えるように */
+  html[data-theme="light"] .ins-slot{
+    background:rgba(0,0,0,.05); border-color:rgba(0,0,0,.35); color:rgba(20,32,42,.6);
+  }
+  html[data-theme="light"] .ins-slot:active{ background:rgba(0,0,0,.14); }
+  html[data-theme="light"] .ins-slot.adj{
+    border-color:#b8860b; color:#8a6508; background:rgba(224,178,74,.35);
+  }
   #veil{position:fixed; inset:0; background:rgba(6,12,20,.86); z-index:60;
     display:none; align-items:center; justify-content:center; padding:16px;}
   #veil.show{display:flex;}
@@ -5425,6 +5718,47 @@ html[data-theme="light"] #sheet .act.g,
 html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
 html[data-theme="light"] #veil,
 html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
+
+/* ライトモード共通：白系の枠・薄文字・薄背景が明るい地に埋もれるのを防ぐ */
+html[data-theme="light"] [class*="slot"],
+html[data-theme="light"] .cell.empty,
+html[data-theme="light"] .empty{
+  border-color:rgba(0,0,0,.28) !important;
+  background:rgba(0,0,0,.05) !important;
+}
+html[data-theme="light"] .cell.slot{
+  border-color:#b8860b !important; background:rgba(224,178,74,.32) !important;
+}
+
+
+
+
+/* ライトモード：薄すぎるゴーストボタン（閉じる・やめる等）を読める濃さに */
+html[data-theme="light"] button.act.ghost,
+html[data-theme="light"] button.act.g,
+html[data-theme="light"] .act.ghost,
+html[data-theme="light"] .act.g{
+  color:#26313a !important;
+  border-color:rgba(0,0,0,.45) !important;
+  opacity:1 !important;
+}
+
+
+/* ライトモード：ダイアログ内の説明文・補足テキストを読める濃さに */
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #sheet .body *,
+html[data-theme="light"] #sbody, html[data-theme="light"] #sbody *,
+html[data-theme="light"] #plines, html[data-theme="light"] #plines *{
+  color:#26313a;
+}
+html[data-theme="light"] #sheet .body b,
+html[data-theme="light"] #sbody b, html[data-theme="light"] #plines b{ color:#7a5c10; }
+/* 透明度で薄くしている補足は、ライトでは色で濃淡をつける */
+html[data-theme="light"] #sbody span[style*="opacity"],
+html[data-theme="light"] #sheet .body span[style*="opacity"]{
+  opacity:1 !important; color:rgba(38,49,58,.72) !important;
+}
 
 </style>
 </head>
@@ -5729,7 +6063,8 @@ async function doPlay(pi, start, count){
   await sleep(700);
 
   // 直前に場にあったカードを「手札に加える or 捨てる」
-  if(prevField){
+  // ※手札を出し切った（あがった）場合は回収する意味がないので聞かない
+  if(prevField && p.hand.length>0){
     if(pi===0){
       await new Promise(res=>{
         showSheet({title:"場のカードをどうする？",
@@ -6200,6 +6535,47 @@ html[data-theme="light"] #sheet .act.g,
 html[data-theme="light"] #sheet .act[style*="transparent"]{ color:#26313a; border-color:rgba(0,0,0,.3); }
 html[data-theme="light"] #veil,
 html[data-theme="light"] #helpveil{ background:rgba(240,238,230,.86); }
+
+
+/* ライトモード共通：白系の枠・薄文字・薄背景が明るい地に埋もれるのを防ぐ */
+html[data-theme="light"] [class*="slot"],
+html[data-theme="light"] .cell.empty,
+html[data-theme="light"] .empty{
+  border-color:rgba(0,0,0,.28) !important;
+  background:rgba(0,0,0,.05) !important;
+}
+html[data-theme="light"] .cell.slot{
+  border-color:#b8860b !important; background:rgba(224,178,74,.32) !important;
+}
+
+
+
+
+/* ライトモード：薄すぎるゴーストボタン（閉じる・やめる等）を読める濃さに */
+html[data-theme="light"] button.act.ghost,
+html[data-theme="light"] button.act.g,
+html[data-theme="light"] .act.ghost,
+html[data-theme="light"] .act.g{
+  color:#26313a !important;
+  border-color:rgba(0,0,0,.45) !important;
+  opacity:1 !important;
+}
+
+
+/* ライトモード：ダイアログ内の説明文・補足テキストを読める濃さに */
+html[data-theme="light"] #sheet .body,
+html[data-theme="light"] #sheet .body *,
+html[data-theme="light"] #sbody, html[data-theme="light"] #sbody *,
+html[data-theme="light"] #plines, html[data-theme="light"] #plines *{
+  color:#26313a;
+}
+html[data-theme="light"] #sheet .body b,
+html[data-theme="light"] #sbody b, html[data-theme="light"] #plines b{ color:#7a5c10; }
+/* 透明度で薄くしている補足は、ライトでは色で濃淡をつける */
+html[data-theme="light"] #sbody span[style*="opacity"],
+html[data-theme="light"] #sheet .body span[style*="opacity"]{
+  opacity:1 !important; color:rgba(38,49,58,.72) !important;
+}
 
 </style>
 </head>
