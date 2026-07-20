@@ -101,6 +101,12 @@
     font:inherit; font-size:.72rem; font-weight:800; padding:6px 14px; border-radius:999px;
     border:1.5px solid rgba(255,255,255,.35); background:transparent; color:#f0ecdf; cursor:pointer;
   }
+  #themeBtn2{
+    font:inherit; font-size:.9rem; line-height:1; padding:6px 10px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,.35); background:transparent; color:#f0ecdf; cursor:pointer;
+    margin-left:auto; flex:0 0 auto;
+  }
+  html[data-theme="light"] #themeBtn2{ color:#26313a; border-color:rgba(0,0,0,.32); }
   #barname{font-size:.78rem; font-weight:800; letter-spacing:.08em; opacity:.85;}
   #frame{flex:1; width:100%; border:none; background:transparent;}
 
@@ -144,6 +150,7 @@
     <div id="bar">
       <button id="back">← ゲーム選択</button>
       <span id="barname"></span>
+      <button id="themeBtn2" title="表示テーマを切り替え">🌙</button>
     </div>
     <iframe id="frame" title="game"></iframe>
   </div>
@@ -205,6 +212,8 @@ function applyTheme(t){
   document.documentElement.setAttribute("data-theme", t);
   const b=document.getElementById("themeBtn");
   if(b) b.textContent = t==="light" ? "☀️ ライト" : "🌙 ダーク";
+  const b2=document.getElementById("themeBtn2");
+  if(b2) b2.textContent = t==="light" ? "☀️" : "🌙";
   try{ localStorage.setItem("bodoge-theme", t); }catch(e){}
   // 開いているゲーム（iframe）にも伝える
   const fr=document.querySelector("#view iframe");
@@ -212,6 +221,9 @@ function applyTheme(t){
 }
 applyTheme(currentTheme());
 document.getElementById("themeBtn").onclick=()=>{
+  applyTheme(document.documentElement.getAttribute("data-theme")==="light" ? "dark" : "light");
+};
+document.getElementById("themeBtn2").onclick=()=>{
   applyTheme(document.documentElement.getAttribute("data-theme")==="light" ? "dark" : "light");
 };
 
@@ -223,8 +235,19 @@ document.getElementById("aboutBtn").onclick=()=>{
 };
 const ABOUT=`
 <h3>ボドゲ集</h3>
-<p>ブラウザで遊べる、CPU対戦カードゲーム集です。全6作品を収録しています。<br>
-すべてのゲームに難易度3段階（やさしい / ふつう / つよい）、遊び方の説明、対戦履歴があります。</p>
+<p>ブラウザで遊べる、CPU対戦のボード／カードゲーム集です。全8作品を収録しています。<br>
+すべてのゲームに難易度3段階（やさしい / ふつう / つよい）、遊び方の説明、対戦履歴があります。<br>
+画面右上（ゲーム中）や下部（ゲーム選択画面）のボタンで、<b>ダーク／ライト</b>の表示を切り替えられます。</p>
+
+<h3>収録ゲーム</h3>
+<p><b>うしのむれ</b> — 104枚を4列に並べ、6枚目を置いた人が引き取る押し付け合い。上級（プロ）ルールも選べます。<br>
+<b>宝石商</b> — 宝石を集めて発展カードを買い、ボーナスを雪だるま式に増やす。15点で決着。<br>
+<b>恋文</b> — 手札は常に1枚。捨て札と推理で相手を脱落させる短期決戦。3点先取。<br>
+<b>踊る容疑者</b> — 犯人カードは手から手へ。探偵で暴くか、いぬで嗅ぎ当てるか、逃げ切るか。<br>
+<b>ジャッカル</b> — 自分のカードだけ見えない。全員の合計を推理して数を釣り上げるチキンレース。<br>
+<b>むしポーカー</b> — 「これはカエルです」…嘘か本当か。嫌われ者を押し付け合う純粋なブラフ勝負。<br>
+<b>ことりならべ</b> — 手札は並べ替えできない。場のカードを回収して役を育て、一気に出し切る大富豪系。<br>
+<b>ぺんぎんの山</b> — 5色のペンギンをピラミッドに積む。土台にない色は上に積めない。</p>
 
 <h3>CPUについて</h3>
 <p>難易度「つよい」は、それぞれ本気で作ってあります。</p>
@@ -233,10 +256,12 @@ const ABOUT=`
 なお「1トリック先だけを評価するMC」も比較しましたが、そちらは平均失点12.8とほぼ改善しませんでした。<b>ラウンド終了まで回すこと</b>が強さの本体です。</p>
 <p><b>ジャッカル / むしポーカー</b> — 捨て札や場札から残り枚数を数え、確率を計算します。むしポーカーのCPUは、あなたがあと1枚で負ける生き物を「本当のことを言って」押し付けてきます。</p>
 <p><b>踊る容疑者</b> — 犯人カードの受け渡しを追跡し、隠れた交換が起きるたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>
+<p><b>ことりならべ / ぺんぎんの山</b> — 場のカードを回収して手札を育てたり、まだ場に出ていない色を数えて相手を詰まらせる置き方を選びます。</p>
 
 <h3>対戦履歴について</h3>
 <p>履歴はゲームごとに保存されます。既定ではブラウザのローカル保存のため、<b>端末をまたぐと別々の記録</b>になります。<br>
-Firebase Realtime Database を設定すると、全端末で共有できます（各ゲームの履歴画面に「保存先」が表示されます）。</p>
+Firebase Realtime Database を設定すると、全端末で共有できます（各ゲームの履歴画面に「保存先」が表示されます）。<br>
+複数の端末で同時に遊んでも記録が失われないよう、1件ずつ追記する方式で保存しています。</p>
 
 <h3>技術メモ</h3>
 <p>依存ライブラリなし・ビルド不要。1ファイルにすべて同梱しています。<br>
@@ -495,7 +520,8 @@ html[data-theme="light"] .cell.slot{
 
 /* うしのむれ：ライトモードの盤面色 */
 html[data-theme="light"]{
-  --felt:#cfe5d8; --felt-dark:#b3d3c1; --ivory:#2b3a33; --ink:#2b2119;
+  --felt:#cfe5d8; --felt-dark:#b3d3c1; --ink:#2b2119;
+  /* --ivory はカードの地色なので明るいまま維持する */
 }
 html[data-theme="light"] body{
   background:radial-gradient(ellipse at 50% -20%, #e2f1e8 0%, var(--felt) 55%, var(--felt-dark) 100%);
@@ -504,7 +530,12 @@ html[data-theme="light"] body{
 html[data-theme="light"] #status, html[data-theme="light"] #msg,
 html[data-theme="light"] #hint, html[data-theme="light"] .name,
 html[data-theme="light"] .score, html[data-theme="light"] #scores,
-html[data-theme="light"] h1, html[data-theme="light"] .sub{ color:#24312b; }
+html[data-theme="light"] h1, html[data-theme="light"] .sub,
+html[data-theme="light"] #histBtn, html[data-theme="light"] #pbtn2,
+html[data-theme="light"] #hand .label, html[data-theme="light"] #handwrap{ color:#24312b !important; }
+html[data-theme="light"] #histBtn, html[data-theme="light"] #pbtn2{ border-color:rgba(0,0,0,.4) !important; }
+/* カードは常に明るい地＋濃い文字（テーマに関わらず固定） */
+html[data-theme="light"] .card{ background:#f7f1e1 !important; color:#2b2119 !important; }
 html[data-theme="light"] .row{ background:rgba(0,0,0,.05); border-color:rgba(0,0,0,.18); }
 html[data-theme="light"] .slot{ border-color:rgba(0,0,0,.22); background:rgba(0,0,0,.04); }
 html[data-theme="light"] .slot.six{ border-color:#b8860b; background:rgba(224,178,74,.28); }
@@ -1447,6 +1478,40 @@ html[data-theme="light"] #sheet .body span[style*="opacity"]{
   opacity:1 !important; color:rgba(38,49,58,.72) !important;
 }
 
+
+/* 貴族：必要数を読みやすく、達成状況を色分け */
+.noble .req{ gap:5px; }
+.noble .req .rq{
+  display:inline-flex; align-items:center; gap:2px;
+  font-size:.68rem; font-weight:800; padding:1px 4px; border-radius:5px;
+  background:rgba(0,0,0,.25);
+}
+.noble .req .rq b{ font-size:.72rem; }
+.noble .req .rq.ok{ background:rgba(80,190,120,.35); }
+.noble.reach{ box-shadow:0 0 0 2px var(--gold); }
+html[data-theme="light"] .noble .req .rq{ background:rgba(255,255,255,.75); color:#26313a; }
+html[data-theme="light"] .noble .req .rq.ok{ background:rgba(60,170,100,.45); color:#12301e; }
+
+
+/* ライトモード：明るい地に乗る金色の文字を、読める濃さの金茶に */
+html[data-theme="light"] #msg .em,
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #fieldinfo,
+html[data-theme="light"] .em{
+  color:#8a6508;
+}
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint{ color:rgba(20,32,42,.72); }
+
+
+/* ライトモード：金色文字を読める濃さに（自動生成） */
+html[data-theme="light"] #msg .em{ color:#8a6508; }
+html[data-theme="light"] #turnorder .tp.now{ color:#8a6508; }
+html[data-theme="light"] .board .pts b{ color:#8a6508; }
+html[data-theme="light"] .gcard .pt{ color:#8a6508; }
+html[data-theme="light"] .noble .np{ color:#8a6508; }
+
 </style>
 </head>
 <body>
@@ -1517,12 +1582,23 @@ function buildDeck(tpls,tier){
 }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function makeNobles(count){
-  const list=[];
+  const twoColor=[], threeColor=[];
   for(let i=0;i<5;i++){
-    list.push({pt:3, req:{[C[i]]:4,[C[(i+1)%5]]:4}});
-    list.push({pt:3, req:{[C[i]]:3,[C[(i+2)%5]]:3,[C[(i+4)%5]]:3}});
+    // 2色タイプ：各色4枚ずつ必要
+    twoColor.push({pt:3, req:{[C[i]]:4,[C[(i+1)%5]]:4}});
+    // 3色タイプ：各色3枚ずつ必要
+    threeColor.push({pt:3, req:{[C[i]]:3,[C[(i+2)%5]]:3,[C[(i+4)%5]]:3}});
   }
-  return shuffle(list).slice(0,count);
+  shuffle(twoColor); shuffle(threeColor);
+  // 両タイプが混ざるよう、交互に取ってから並べ替える
+  const picked=[];
+  for(let k=0; picked.length<count; k++){
+    if(k%2===0 && twoColor.length) picked.push(twoColor.pop());
+    else if(threeColor.length) picked.push(threeColor.pop());
+    else if(twoColor.length) picked.push(twoColor.pop());
+    else break;
+  }
+  return shuffle(picked);
 }
 
 /* ================= state ================= */
@@ -1648,8 +1724,16 @@ function renderAll(){
   renderTurnOrder();
   $("cpuboard").innerHTML=players.slice(1).map((p,i)=>boardHTML(p,turnPlayer===i+1)).join("");
   $("myboard").innerHTML=boardHTML(players[0],turnPlayer===0);
-  $("nobles").innerHTML=nobles.map(n=>`<div class="noble"><div class="np">${n.pt}点</div>
-    <div class="req">${Object.entries(n.req).map(([c,v])=>`<span>${bonuschip(c)}${v}</span>`).join("")}</div></div>`).join("");
+  const me=players[0];
+  $("nobles").innerHTML=nobles.map(n=>{
+    const reqs=Object.entries(n.req).map(([c,v])=>{
+      const have=me.bonus[c]||0, ok=have>=v;
+      return `<span class="rq${ok?" ok":""}">${bonuschip(c)}<b>${have}/${v}</b></span>`;
+    }).join("");
+    const done=Object.entries(n.req).every(([c,v])=>(me.bonus[c]||0)>=v);
+    return `<div class="noble${done?" reach":""}"><div class="np">${n.pt}点</div>
+      <div class="req">${reqs}</div></div>`;
+  }).join("");
   $("market").innerHTML=[2,1,0].map(t=>`<div class="tier">
       <div class="deckback" style="background:${["#1d4d3a","#3a3a68","#5e2f4e"][t]}">Lv${t+1}<span>残${decks[t].length}</span></div>
       <div class="cards4">${market[t].map(c=>cardHTML(c, c&&canBuy(players[0],c)&&turnPlayer===0?"buyable":"")).join("")}</div>
@@ -2285,6 +2369,23 @@ html[data-theme="light"] #sheet .body span[style*="opacity"]{
 /* カード内の説明文をもう少し読みやすく（カード地は常にクリーム色） */
 #sheet .peek .ds{ opacity:1; color:rgba(58,37,48,.9); }
 .bigcard .ds{ opacity:1; color:rgba(58,37,48,.88); }
+
+
+/* ライトモード：明るい地に乗る金色の文字を、読める濃さの金茶に */
+html[data-theme="light"] #msg .em,
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #fieldinfo,
+html[data-theme="light"] .em{
+  color:#8a6508;
+}
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint{ color:rgba(20,32,42,.72); }
+
+
+/* ライトモード：金色文字を読める濃さに（自動生成） */
+html[data-theme="light"] #msg .em{ color:#8a6508; }
+html[data-theme="light"] .opp .intel{ color:#8a6508; }
 
 </style>
 </head>
@@ -3165,6 +3266,23 @@ html[data-theme="light"] #sbody span[style*="opacity"],
 html[data-theme="light"] #sheet .body span[style*="opacity"]{
   opacity:1 !important; color:rgba(38,49,58,.72) !important;
 }
+
+
+/* ライトモード：金色の文字が明るい背景で読めないので濃い色に */
+html[data-theme="light"] #intel{ color:#7a5c10; }
+html[data-theme="light"] .em,
+html[data-theme="light"] #msg .em{ color:#8a6508; }
+html[data-theme="light"] #topinfo{ color:rgba(20,32,42,.75); }
+html[data-theme="light"] .seat .rel{ color:rgba(20,32,42,.6); }
+html[data-theme="light"] #seats .arrow{ color:rgba(20,32,42,.65); }
+html[data-theme="light"] .who .nm{ color:#22303a; }
+html[data-theme="light"] .played .pc{ color:#2b2119; }
+
+
+/* ライトモード：金色文字を読める濃さに（自動生成） */
+html[data-theme="light"] #intel{ color:#8a6508; }
+html[data-theme="light"] #msg .em{ color:#8a6508; }
+html[data-theme="light"] .seat.now .dot{ color:#8a6508; }
 
 </style>
 </head>
@@ -4055,8 +4173,16 @@ chooseSetup();
     border:1.5px solid rgba(255,255,255,.4); background:rgba(0,0,0,.3); color:var(--sand); cursor:pointer;
   }
   #num{
-    font-size:1.8rem; font-weight:800; min-width:76px; text-align:center; color:var(--gold);
+    font-size:1.8rem; font-weight:800; width:96px; text-align:center; color:var(--gold);
+    background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.28);
+    border-radius:10px; padding:4px 2px; font-family:inherit; -moz-appearance:textfield;
   }
+  #num:focus{ outline:none; border-color:var(--gold); background:rgba(255,255,255,.14); }
+  #num::-webkit-outer-spin-button, #num::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  html[data-theme="light"] #num{
+    background:rgba(0,0,0,.05); border-color:rgba(0,0,0,.28); color:#8a6508;
+  }
+  html[data-theme="light"] #num:focus{ border-color:#b8860b; background:rgba(0,0,0,.09); }
   #btns{display:flex; gap:8px;}
   button.act{
     font:inherit; font-weight:800; letter-spacing:.06em; padding:10px 22px; border-radius:999px;
@@ -4169,6 +4295,44 @@ html[data-theme="light"] #sheet .body span[style*="opacity"]{
   opacity:1 !important; color:rgba(38,49,58,.72) !important;
 }
 
+
+/* カード集計表 */
+#counttable{ margin:8px 0 6px; }
+#counttable .cthead{ font-size:.58rem; opacity:.65; margin-bottom:4px; text-align:center; }
+#counttable .ctrow{ display:flex; gap:3px; justify-content:center; flex-wrap:wrap; }
+#counttable .ctrow.sp{ margin-top:4px; }
+.ctcell{
+  min-width:34px; padding:3px 4px; border-radius:6px; text-align:center;
+  background:rgba(255,255,255,.10); border:1.5px solid transparent; line-height:1.15;
+}
+.ctcell .ctv{ font-size:.66rem; font-weight:800; }
+.ctcell .ctn{ font-size:.6rem; font-weight:800; opacity:.9; }
+.ctcell .ctn span{ font-size:.5rem; opacity:.6; font-weight:600; }
+.ctcell.sp{ min-width:48px; }
+.ctcell.sp .ctv{ font-size:.56rem; }
+.ctcell.ct-none{ opacity:.35; }
+html[data-theme="light"] .ctcell{ background:rgba(0,0,0,.07); }
+html[data-theme="light"] .ctcell.ct-none{ opacity:.4; }
+
+
+/* ライトモード：明るい地に乗る金色の文字を、読める濃さの金茶に */
+html[data-theme="light"] #msg .em,
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #fieldinfo,
+html[data-theme="light"] .em{
+  color:#8a6508;
+}
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint{ color:rgba(20,32,42,.72); }
+
+
+/* ライトモード：金色文字を読める濃さに（自動生成） */
+html[data-theme="light"] #msg .em{ color:#8a6508; }
+html[data-theme="light"] #num{ color:#8a6508; }
+html[data-theme="light"] #num:focus{ color:#8a6508; }
+html[data-theme="light"] .who .say{ color:#8a6508; }
+
 </style>
 </head>
 <body>
@@ -4191,7 +4355,7 @@ html[data-theme="light"] #sheet .body span[style*="opacity"]{
     <div id="controls">
       <div id="dial">
         <button class="step" id="minus">−</button>
-        <div id="num">1</div>
+        <input id="num" type="number" inputmode="numeric" pattern="[0-9]*" value="1">
         <button class="step" id="plus">＋</button>
       </div>
       <div id="minhint"></div>
@@ -4200,6 +4364,7 @@ html[data-theme="light"] #sheet .body span[style*="opacity"]{
         <button class="act danger" id="coyote">ジャッカル！</button>
       </div>
     </div>
+    <div id="counttable"></div>
     <div id="discwrap">捨て札（次のラウンドでは出ません）<div id="disc"></div></div>
   </div>
 </div>
@@ -4374,8 +4539,42 @@ function cardHTML(c){
   const cls = c.v<0 ? "neg" : (c.v===0 ? "zero" : "");
   return `<div class="fcard ${cls}"><span class="v">${c.v}</span><span class="lb">ジャッカル</span></div>`;
 }
+
+/* 常設のカード集計表：捨て札（前ラウンドまで）のみを反映する。
+   今ラウンドで場に出ているカードを含めると、差し引きで自分の1枚が特定できてしまうため。 */
+function renderCountTable(){
+  const full=buildDeck();
+  const total={}, used={};
+  for(const c of full){ const k=key(c); total[k]=(total[k]||0)+1; }
+  for(const c of discard){ const k=key(c); used[k]=(used[k]||0)+1; }
+
+  const order=[20,15,10,5,4,3,2,1,0,-5,-10];
+  const numCells=order.map(v=>{
+    const k="n"+v, t=total[k]||0;
+    if(!t) return "";
+    const u=used[k]||0, left=t-u;
+    const cls = left<=0 ? "ct-none" : "";
+    return `<div class="ctcell ${cls}">
+      <div class="ctv">${v}</div>
+      <div class="ctn">${left}<span>/${t}</span></div></div>`;
+  }).join("");
+  const spCells=[SP.X2,SP.MAX0,SP.NIGHT,SP.DRAW].map(sp=>{
+    const k="s"+sp, u=used[k]||0;
+    const left=1-u;
+    const cls = left<=0 ? "ct-none" : "";
+    return `<div class="ctcell sp ${cls}">
+      <div class="ctv">${LABEL[sp]}</div>
+      <div class="ctn">${left}<span>/1</span></div></div>`;
+  }).join("");
+  $("counttable").innerHTML=
+    `<div class="cthead">残り枚数（グレー＝もう出ない）　※前のラウンドまでの捨て札を反映</div>
+     <div class="ctrow">${numCells}</div>
+     <div class="ctrow sp">${spCells}</div>`;
+}
+
 function render(){
   $("topinfo").textContent=`${N()}人 ・ CPU:${DIFF_LABEL[diffLevel]} ・ ライフ3で脱落 ・ 残り山札${deck.length}`;
+  renderCountTable();
   $("others").innerHTML=players.map((p,i)=>{
     if(i===0) return "";
     return `<div class="who${turnIdx===i&&!over?" active":""}${p.life<=0?" out":""}">
@@ -4389,8 +4588,8 @@ function render(){
   $("meline").innerHTML=`🧑 あなた <span class="life">${"♥".repeat(me.life)}${"♡".repeat(3-me.life)}</span>
     ${me.say?`<span style="color:var(--gold)">「${me.say}」</span>`:""}`;
   $("disc").innerHTML=discard.map(c=>`<span class="dc">${cardName(c)}</span>`).join("")||`<span style="opacity:.4">なし</span>`;
-  $("num").textContent=myBid;
-  $("minhint").textContent = lastBid>0 ? `前の宣言は ${lastBid} — ${lastBid+1} 以上を宣言` : "1 以上を宣言";
+  if(document.activeElement!==$("num")) $("num").value=myBid;
+  $("minhint").textContent = lastBid>0 ? `前の宣言は ${lastBid} — ${lastBid+1} 以上を宣言（数字をタップで直接入力）` : "1 以上を宣言（数字をタップで直接入力）";
 }
 function showMyCard(reveal){
   const el=$("mycard"), me=players[0];
@@ -4434,8 +4633,31 @@ async function step(){
 }
 $("minus").onclick=()=>{ myBid=Math.max(lastBid+1, myBid-1); render(); };
 $("plus").onclick =()=>{ myBid=myBid+1; render(); };
+/* 数字を直接入力（大きく吊り上げたいとき用） */
+$("num").addEventListener("input", ()=>{
+  const v=parseInt($("num").value,10);
+  if(Number.isFinite(v)) myBid=v;          // 入力中は下限で弾かない（打ちにくくなるため）
+});
+$("num").addEventListener("blur", ()=>{     // 確定時に下限へ丸める
+  const v=parseInt($("num").value,10);
+  myBid = Number.isFinite(v) ? Math.max(lastBid+1, v) : lastBid+1;
+  render();
+});
+$("num").addEventListener("keydown", e=>{   // Enterで確定
+  if(e.key==="Enter"){ e.preventDefault(); $("num").blur(); }
+});
+$("num").addEventListener("focus", ()=>{ $("num").select(); });
 $("declare").onclick=async()=>{
-  if(busy) return; busy=true;
+  if(busy) return;
+  // 入力欄の値を確定させ、下限を下回っていたら弾く
+  const typed=parseInt($("num").value,10);
+  if(Number.isFinite(typed)) myBid=typed;
+  if(!Number.isFinite(myBid) || myBid<=lastBid){
+    myBid=lastBid+1; render();
+    msg(`<span class="bad">${lastBid+1} 以上を宣言してください</span>`);
+    return;
+  }
+  busy=true;
   $("controls").classList.remove("on");
   players[0].say=String(myBid);
   lastBid=myBid; lastBidder=0;
@@ -4923,6 +5145,51 @@ html[data-theme="light"] #sheet .body span[style*="opacity"]{
   opacity:1 !important; color:rgba(38,49,58,.72) !important;
 }
 
+
+/* ライトモード：明るい地に乗る金色の文字を、読める濃さの金茶に */
+html[data-theme="light"] #msg .em,
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #fieldinfo,
+html[data-theme="light"] .em{
+  color:#8a6508;
+}
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint{ color:rgba(20,32,42,.72); }
+
+
+/* 残り枚数表 */
+#counttable{ margin-top:8px; }
+#counttable .cthead{ font-size:.58rem; opacity:.7; margin-bottom:4px; text-align:center; }
+#counttable .cthead b{ color:var(--lie); }
+#counttable .ctrow{ display:flex; gap:3px; justify-content:center; flex-wrap:wrap; }
+.ctcell{
+  min-width:38px; padding:3px 4px; border-radius:6px; text-align:center;
+  background:rgba(255,255,255,.10); border:1.5px solid transparent; line-height:1.2;
+}
+.ctcell .cti{ font-size:.9rem; }
+.ctcell .ctn{ font-size:.62rem; font-weight:800; }
+.ctcell .ctn span{ font-size:.5rem; opacity:.6; font-weight:600; }
+.ctcell.ct-low{ border-color:rgba(230,180,80,.8); }
+.ctcell.ct-none{ border-color:var(--lie); background:rgba(200,60,60,.22); }
+.ctcell.ct-none .ctn{ color:var(--lie); }
+html[data-theme="light"] .ctcell{ background:rgba(0,0,0,.07); }
+html[data-theme="light"] .ctcell.ct-none{ background:rgba(200,60,60,.2); }
+
+
+/* ライトモード：宣言名やプレイヤー名の金色を読める濃さに */
+html[data-theme="light"] #claim .q{ color:#8a6508; }
+html[data-theme="light"] #claim{ color:#26313a; }
+html[data-theme="light"] #chain{ color:rgba(20,32,42,.62); }
+html[data-theme="light"] #msg .em{ color:#8a6508; }
+html[data-theme="light"] #handlabel{ color:rgba(20,32,42,.7); }
+html[data-theme="light"] .pl .nm{ color:#22303a; }
+
+
+/* ライトモード：金色文字を読める濃さに（自動生成） */
+html[data-theme="light"] #claim .q{ color:#8a6508; }
+html[data-theme="light"] #msg .em{ color:#8a6508; }
+
 </style>
 </head>
 <body>
@@ -4947,6 +5214,7 @@ html[data-theme="light"] #sheet .body span[style*="opacity"]{
   <div id="myarea">
     <div id="handlabel">あなたの手札</div>
     <div id="hand"></div>
+    <div id="counttable"></div>
   </div>
 </div>
 
@@ -5099,6 +5367,26 @@ function pilesHTML(p){
   });
   return items.join("") || `<span class="nopile">まだ引き取っていません</span>`;
 }
+
+/* 常設の残り枚数表：場に出ている引き取り札（全員に公開）＋自分の手札から算出。
+   どちらも自分が正当に見られる情報なので、情報漏れにはならない。 */
+function renderCountTable(){
+  const me=players[meIdx()];
+  const cells=KIND.map(x=>{
+    let onBoard=0;
+    for(const p of players) onBoard += pileCount(p,x.k);
+    const inHand=me.hand.filter(k=>k===x.k).length;
+    const left=8-onBoard-inHand;
+    const cls = left<=0 ? "ct-none" : (left<=1 ? "ct-low" : "");
+    return `<div class="ctcell ${cls}">
+      <div class="cti">${x.i}</div>
+      <div class="ctn">${left}<span>/8</span></div></div>`;
+  }).join("");
+  $("counttable").innerHTML=
+    `<div class="cthead">残り枚数（場・自分の手札を除く）　<b>0＝その宣言は確実に嘘</b></div>
+     <div class="ctrow">${cells}</div>`;
+}
+
 function render(){
   $("topinfo").textContent=`${N()}人 ・ CPU:${DIFF_LABEL[diffLevel]} ・ 同種${LIMIT}枚か8種類コンプで敗北`;
   $("board").innerHTML=players.map((p,i)=>{
@@ -5125,6 +5413,7 @@ function render(){
     $("chain").textContent="";
   }
   renderHand(false);
+  renderCountTable();
 }
 function renderHand(playable){
   const me=players[meIdx()];
@@ -5759,6 +6048,24 @@ html[data-theme="light"] #sbody span[style*="opacity"],
 html[data-theme="light"] #sheet .body span[style*="opacity"]{
   opacity:1 !important; color:rgba(38,49,58,.72) !important;
 }
+
+
+/* ライトモード：明るい地に乗る金色の文字を、読める濃さの金茶に */
+html[data-theme="light"] #msg .em,
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #fieldinfo,
+html[data-theme="light"] .em{
+  color:#8a6508;
+}
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint{ color:rgba(20,32,42,.72); }
+
+
+/* ライトモード：金色文字を読める濃さに（自動生成） */
+html[data-theme="light"] #msg .em{ color:#8a6508; }
+html[data-theme="light"] .ins-slot.adj{ color:#8a6508; }
+html[data-theme="light"] .who .st.up{ color:#8a6508; }
 
 </style>
 </head>
@@ -6576,6 +6883,22 @@ html[data-theme="light"] #sbody span[style*="opacity"],
 html[data-theme="light"] #sheet .body span[style*="opacity"]{
   opacity:1 !important; color:rgba(38,49,58,.72) !important;
 }
+
+
+/* ライトモード：明るい地に乗る金色の文字を、読める濃さの金茶に */
+html[data-theme="light"] #msg .em,
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint,
+html[data-theme="light"] #fieldinfo,
+html[data-theme="light"] .em{
+  color:#8a6508;
+}
+html[data-theme="light"] #topinfo,
+html[data-theme="light"] #myhint{ color:rgba(20,32,42,.72); }
+
+
+/* ライトモード：金色文字を読める濃さに（自動生成） */
+html[data-theme="light"] #msg .em{ color:#8a6508; }
 
 </style>
 </head>
