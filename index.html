@@ -45,6 +45,7 @@
   .t-goki{background:linear-gradient(160deg,#4a5a2c,#1b2112);}
   .t-kotori{background:linear-gradient(160deg,#2f5068,#111f2b);}
   .t-pengin{background:linear-gradient(160deg,#2a4a5e,#0f1e28);}
+  .t-keizai{background:linear-gradient(160deg,#6b4a2f,#2a1a10);}
   /* ライトモード：タイルを淡い色にして濃い文字を載せる */
   html[data-theme="light"] .t-nimmt{background:linear-gradient(160deg,#c9e6d6,#a5d2ba);}
   html[data-theme="light"] .t-gems{background:linear-gradient(160deg,#ded2ec,#c3b2da);}
@@ -54,6 +55,7 @@
   html[data-theme="light"] .t-goki{background:linear-gradient(160deg,#d9e4c4,#bccf9c);}
   html[data-theme="light"] .t-kotori{background:linear-gradient(160deg,#cfe0ec,#aec8dc);}
   html[data-theme="light"] .t-pengin{background:linear-gradient(160deg,#cee2ec,#a9cadc);}
+  html[data-theme="light"] .t-keizai{background:linear-gradient(160deg,#ecdcc0,#d3b892);}
   html[data-theme="light"] .tile{ color:#22303a; border-color:rgba(0,0,0,.10); }
   html[data-theme="light"] .tile:hover{ border-color:rgba(0,0,0,.35); }
   html[data-theme="light"] .tile .en{ opacity:1; color:rgba(20,32,42,.55); }
@@ -174,6 +176,8 @@ const GAMES=[
    ds:"手札は並べ替えできない。場のカードを回収して役を育て、一気に出し切る大富豪系。", pl:"3〜6人 ・ 難易度3段階"},
   {id:"pengin", cls:"t-pengin", ico:"🐧", nm:"ぺんぎんの山", en:"PENGUIN PYRAMID",
    ds:"5色のペンギンをピラミッドに積む。土台にない色は上に積めない。出し切れずに残すと失点。", pl:"2〜6人 ・ 難易度3段階"},
+  {id:"keizai", cls:"t-keizai", ico:"🏗️", nm:"はたらく街", en:"WORKER TOWN",
+   ds:"労働者を職場に送り、建物を建てて街を育てる。毎ラウンド賃金が上がり、払えないと建物を手放すことに。", pl:"2〜4人 ・ 難易度3段階"},
 ];
 const $=id=>document.getElementById(id);
 
@@ -194,7 +198,7 @@ document.querySelectorAll(".howto").forEach(el=>{
   el.onclick=e=>{ e.stopPropagation(); showHelp(el.dataset.help); };
 });
 
-const RULES={"nimmt": {"title": "うしのむれ", "html": "<p class=\"hgoal\"><b>目的</b>　牛マーク（🐮）を最も少なく引き取った人の勝ち。誰かが66🐮に達したラウンドで終了です。</p><h3>カード</h3><p>1〜104の数字カード。数字ごとに牛マークの数が違います。<br><b>5の倍数＝🐮2</b> ／ <b>10の倍数＝🐮3</b> ／ <b>11の倍数＝🐮5</b> ／ <b>55＝🐮7</b> ／ それ以外＝🐮1<br>牛マークがそのまま失点です。キリのいい数字ほど危険。</p><h3>流れ</h3><p>場に4つの列があります。全員が手札から1枚を<b>同時に</b>選び、小さい数字の人から順に置いていきます。<br>置く列は選べません。<b>自分の数字より小さく、かつ最も近い数字が末尾にある列</b>に自動的に置かれます。</p><h3>引き取り</h3><p>列は5枚まで。<b>6枚目を置くことになった人が、その列の5枚をすべて引き取ります</b>（＝失点）。<br>引き取ったあと、その列は自分のカード1枚だけになります。</p><h3>どの列にも置けないとき</h3><p>自分のカードが<b>どの列の末尾よりも小さい</b>場合、好きな列を1つ選んで引き取ります。<br>手札に小さい数字を抱え込んでいると、これを強いられます。</p><h3>コツ</h3><p>列が4〜5枚まで伸びていると、次に置いた人が引き取る危険があります。<br>「安い列をわざと引き取って、場をリセットする」のも立派な戦術です。<br>全員同時出しなので、<b>他の人がどの数字を出しそうか</b>を読むゲームです。</p><h3>上級（プロ）ルール</h3><p>ゲーム開始時に選べます。<br>通常は、カードは「末尾が自分より小さく、差が最も近い列」に置かれます。<br><b>プロルールでは、列の先頭（左端）にも置けるようになります</b>。カードより先頭が大きい列なら、その手前に入れられます。<br>置き場所は<b>末尾・先頭を問わず、数値差が最小の場所に自動で決まります</b>（若い数字の人から順に処理）。前置きでその列が<b>6枚目</b>になった人は、通常どおり引き取りです。<br>小さいカードにも置き場所が生まれるぶん、駆け引きが深くなる上級者向けルールです。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない札から相手の手札を推定し（決定化サンプリング）、そこからラウンド終了までを何百回もシミュレーションして、失点の期待値が最小になる札を選びます。<br>すべての可能性を読み切る完全探索ではなく、シミュレーションによる<b>近似</b>です。それでも、単純に「安全そうな列」を選ぶだけのCPU（＝ふつう）と対戦させると、平均失点は 13.2 → 7.6、勝率は 25%（4人戦の基準値）→ 46.7% になります。</p>"}, "gems": {"title": "宝石商", "html": "<p class=\"hgoal\"><b>目的</b>　発展カードで得点を集め、先に15点へ。全員の手番数が揃った時点で集計し、同点ならカード枚数が少ない方の勝ちです。</p><h3>手番でできること（3つのうち1つ）</h3><p><b>① 宝石を取る</b>：違う色を3枚 ／ または同じ色を2枚（山に4枚以上残っている場合のみ）<br><b>② カードを買う</b>：コストを支払って発展カードを購入<br><b>③ カードを確保する</b>：1枚を手元にキープし、金を1枚もらう（最大3枚）</p><h3>ボーナスが雪だるま式に効く</h3><p>買った発展カードは<b>永続の割引</b>になります。白のカードを2枚持っていれば、以後どのカードも白のコストが2つ安くなります。<br>序盤は安いカードでボーナスを増やし、終盤に高得点カードを買うのが基本です。</p><h3>宝石は10枚まで</h3><p>手持ちの宝石が10枚を超えたら超過分を捨てます。取りすぎに注意。</p><h3>貴族</h3><p>上部の貴族タイルは、指定された色のボーナス数を満たすと<b>自動的に訪問し+3点</b>。色を意図的に偏らせる価値があります。</p><h3>金（ワイルド）</h3><p>確保でもらえる金は、どの色の代わりにも使えます。高額カードを買う切り札です。</p><h3>手番順と操作</h3><p>画面上部に<b>手番順</b>が表示されます（金枠が現在の手番）。先手はランダムに決まり、以降その順で時計回りに回ります。<br>宝石をタップして選び「宝石を取る」。同じ宝石を<b>2回タップ</b>で同色2枚になります。金枠のカードは今すぐ買えるカードです。</p><h3>CPUについて</h3><p>つよいCPUは、あなたがあと少しで買えそうな高得点カードを「確保」で横取りしてきます。狙いのカードは早めに押さえましょう。</p>"}, "koibumi": {"title": "恋文", "html": "<p class=\"hgoal\"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークンを1個獲得。<b>先に3個</b>集めた人の勝ちです（第2版の正規ルール）。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。<br>ヘッダーの<b>「内訳」</b>ボタンで、16枚の構成と残り枚数がいつでも確認できます。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、<b>最も強いカードの人が勝ち</b>。<br>同じ数字で並んだ場合は<b>引き分け</b>となり、その全員がトークンを獲得します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>"}, "hannin": {"title": "踊る容疑者", "html": "<p class=\"hgoal\"><b>目的</b>　犯人カードの持ち主を暴けば探偵側の勝ち。犯人が最後の1枚として犯人カードを出せたら犯人の勝ちです。</p><h3>まず知っておくこと</h3><p><b>犯人は固定されていません。</b>犯人カードは取り引き・うわさ・情報操作で人から人へ移ります。<br>いま持っている人が犯人。さっきまで犯人だった人が今は無関係、ということも普通に起こります。</p><h3>勝ち方は3つ</h3><p><b>① 探偵</b>で犯人カードの持ち主を指名して当てる<br><b>② いぬ</b>で相手の手札から犯人カードを引き当てる<br><b>③ 犯人カードを、手札が最後の1枚になったときに出す</b>（逃げ切り）</p><h3>重要：アリバイ</h3><p>犯人カードを持っていても、<b>アリバイを一緒に持っていれば探偵に指名されても「いいえ」と言えます</b>。<br>逆に、アリバイを持たない犯人は探偵に怯えることになります。</p><h3>主なカード</h3><p><b>探偵</b>：1人を指名（最初の一巡では使用不可） ／ <b>いぬ</b>：1人の手札からランダムに1枚<br><b>目撃者</b>：1人の手札を全部見る ／ <b>少年</b>：いま犯人カードを持つ人を自分だけが知る<br><b>取り引き</b>：1人と1枚ずつ裏向きで交換 ／ <b>うわさ</b>：全員が右隣からランダムに1枚<br><b>情報操作</b>：全員が1枚選んで左隣へ ／ <b>たくらみ</b>：以後、犯人と運命共同体<br><b>アリバイ</b>：持つ限り探偵を否認できる ／ <b>一般人</b>：何も起こらない</p><h3>たくらみの罠</h3><p>たくらみを出した人は犯人の味方です。<b>たくらみ済の人が探偵で犯人を当てても、道連れで負けます</b>。</p><h3>画面の見方</h3><p>上部の<b>円</b>が席順です。あなたは常に下、手番は<b>時計回り</b>に進みます。<br>「うわさ」は<b>右隣（前の手番の人）</b>から引き、「情報操作」は<b>左隣（次の手番の人）</b>へ渡します。<br>あなたが得た情報（見た手札、少年情報、受け取った札、犯人カードが自分に来た警告）は、手札の上のメモ欄に残ります。</p><h3>CPUについて</h3><p>つよいCPUは、犯人カードを渡した相手を記憶し、うわさや取り引きで動くたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>"}, "jackal": {"title": "ジャッカル", "html": "<p class=\"hgoal\"><b>目的</b>　自分のカードだけが見えない状態で「全員の合計以下」の数を宣言し続けるチキンレース。ライフを3回失うと脱落、最後まで残れば勝ちです。</p><h3>自分のカードだけ見えない</h3><p>全員が1枚ずつカードを引き、<b>自分だけ見えないように額に掲げます</b>。<br>他の人のカードは全部見えるので、<b>見えている合計＋自分の未知の1枚</b>を推理することになります。</p><h3>流れ</h3><p>手番の人は、全員の合計以下だと思う数を宣言します。次の人は<b>それより大きい数を宣言</b>するか、「ジャッカル！」と疑うかを選びます。</p><h3>「ジャッカル！」で疑う</h3><p>直前の宣言が合計を<b>超えている</b>と思ったら宣言します。全員がカードを公開して答え合わせ。<br>宣言 > 合計 なら<b>宣言した人</b>がライフを失い、宣言 ≦ 合計 なら<b>疑った人</b>がライフを失います。</p><h3>カード構成（36枚）</h3><p>1〜5が各4枚 ／ 0・10が各3枚 ／ -5・15が各2枚 ／ -10・20が各1枚<br>特殊カードが各1枚：<b>×2</b>（合計を2倍） ／ <b>MAX→0</b>（最大の数字を0にする） ／ <b>夜0</b>（0として扱い、次から山札を作り直す） ／ <b>?</b>（公開時に山札から1枚追加）</p><h3>コツ</h3><p>使ったカードは捨て札に残り、画面下でいつでも見られます。<b>20や-10が既に出ているか</b>を数えれば、自分のカードの見当がつきます。<br>ヘッダーの<b>「内訳」</b>ボタンで、36枚の構成と、どれが既に出たかを一覧できます。<br>また、みんなが妙に高い数を言うなら、あなたが大きい数字を持っている可能性が高いです。</p><h3>CPUについて</h3><p>つよいCPUは捨て札を数え、自分のカードの確率分布から合計の期待値を計算します。時々つり上げのブラフも打ってきます。</p>"}, "gokipoker": {"title": "むしポーカー", "html": "<p class=\"hgoal\"><b>目的</b>　「一人負け」を決めるゲーム。同じ生き物を4枚（2人戦は5枚）引き取るか、8種類すべて引き取るか、手札が尽きて出せなくなった人の負けです。</p><h3>流れ</h3><p>手番の人は手札から1枚を裏向きで誰かに渡し、<b>「これは○○です」と宣言</b>します。<b>本当でも嘘でもOK</b>。</p><h3>受け取った人の選択肢</h3><p><b>①「本当だ」または「嘘だ」と答える</b> → カードを公開。<br>　当てられたら<b>渡した人</b>が引き取り、外したら<b>自分</b>が引き取ります。<br><b>② 覗いて回す</b> → 自分だけカードを確認し、まだ見ていない人に回します。宣言は変えてもOK。<br>　ただし<b>全員が見てしまったら、最後の人は必ず答えなければなりません</b>。</p><h3>引き取ったら</h3><p>そのカードは表向きで自分の前に置かれ、全員に見えます。引き取った人が次の親になります。</p><h3>数えることが最大のコツ</h3><p>各生き物は8枚ずつしかありません。<b>場に見えている枚数＋自分の手札の枚数</b>を数えて、残りが0なら、その宣言は<b>確実に嘘</b>です。<br>ヘッダーの<b>「内訳」</b>ボタンを押すと、この計算を自動でやってくれます。</p><h3>押し付け合いの読み合い</h3><p>相手が3枚集めている生き物を、<b>本当のことを言って</b>渡すのが強力です。相手は怖くて「嘘だ」と言いたくなり、外して引き取ってしまいます。</p><h3>CPUについて</h3><p>つよいCPUは残り枚数を数えて確実な嘘を見抜き、あなたが3枚集めている生き物を狙って押し付けてきます。</p>"}, "kotori": {"title": "ことりならべ", "html": "<p class=\"hgoal\"><b>目的</b>　手札をいち早く出し切る「大富豪」系のゲーム。最後まで残るとペンギンを失い、2個失うと脱落。最後まで生き残れば勝ちです。</p><h3>手札は並べ替えできない</h3><p>配られた手札は<b>並び順を変えられません</b>。この制約がこのゲームの肝です。<br>だから最初はバラバラで、大きな役が作れません。</p><h3>カードの出し方</h3><p>自分の番に、手札からカードを出します。<b>手札で隣り合っている同じ数字は、まとめて出せます</b>（例：3が3枚並んでいれば3枚出し）。<br>場に出ているカードより<b>強い役</b>しか出せません。出せない・出したくないときはパスします。</p><h3>役の強さ</h3><p><b>枚数が多いほど強い</b>（1が2枚 ＞ 7が1枚）。<br><b>同じ枚数なら、数字が大きいほど強い</b>（7が2枚 ＞ 3が2枚）。</p><h3>カードを回収して手札を育てる（重要）</h3><p>手札を強化する方法が2つあります。<br>①<b>カードを出したとき</b>：直前に場にあったカードを「手札に加える」か「捨てる」か選べます。<br>②<b>パスしたとき</b>：山札から1枚引き、「手札に加える」か「捨てる」か選べます。<br>加えるときは絵をタップして同じ数字の隣に差し込み、<b>大きな役を育てられます</b>。並べ替えできないぶん、これが手札を強化する手段です。</p><h3>場が流れる</h3><p>カードを出した人以外の全員がパスをして、再びその人の番が来たら、場のカードは全て捨てられ、その人から好きなカードを出せます。</p><h3>勝敗</h3><p>手札を出し切った人から順に「あがり」。最後まで残った人がペンギンを1個失います。<br>ペンギンを2個失うと脱落。生き残れば勝ちです。</p><h3>CPUについて</h3><p>つよいCPUは、場のカードを回収して手札を育て、大きな役は温存し、終盤に一気に出し切る動きをします。</p>"}, "pengin": {"title": "ぺんぎんの山", "html": "<p class=\"hgoal\"><b>目的</b>　手札のペンギンをピラミッドに置いて、いち早く出し切るゲーム。置けずに残った手札がシャチチップ（失点）になります。人数分のラウンドを終えて、失点が最も少ない人の勝ちです。</p><h3>カード</h3><p>5色のペンギンが各7枚、全35枚。色だけが意味を持ちます。</p><h3>ピラミッドを積む</h3><p>手番に手札から1枚をピラミッドに置きます。<br><b>最下段</b>は好きな色を置けます（最大8枚、2人・5人時は7枚）。左から順に埋まります。</p><h3>上の段のルール（重要）</h3><p>上の段に置けるのは、<b>すぐ真下で隣り合う2枚のうち、どちらかと同じ色</b>のときだけです。<br>たとえば下が「赤・青」なら、その上には赤か青しか置けません。<br>土台にない色は、上に積むことができません。</p><h3>置けなくなったら脱落</h3><p>自分の番に、手札のどのカードも置けなくなったら<b>脱落</b>。残った手札の枚数分シャチチップ（失点）を受け取ります。</p><h3>勝敗</h3><p>全員が脱落するか、誰かが出し切るとラウンド終了。人数分のラウンドを行い、<b>シャチチップの合計が最も少ない人</b>の勝ちです。</p><h3>コツ</h3><p>「まだ積める色」「その色の残り枚数」「自分の手札」を見比べるゲームです。<br>自分が多く持つ色を土台に置いて上に伸ばせるようにし、逆に相手が持っていそうな色は土台から締め出すのが基本です。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない各色の枚数を数え、自分の色を通しやすく、相手の色を詰まらせるように置いてきます。</p>"}};
+const RULES={"nimmt": {"title": "うしのむれ", "html": "<p class=\"hgoal\"><b>目的</b>　牛マーク（🐮）を最も少なく引き取った人の勝ち。誰かが66🐮に達したラウンドで終了です。</p><h3>カード</h3><p>1〜104の数字カード。数字ごとに牛マークの数が違います。<br><b>5の倍数＝🐮2</b> ／ <b>10の倍数＝🐮3</b> ／ <b>11の倍数＝🐮5</b> ／ <b>55＝🐮7</b> ／ それ以外＝🐮1<br>牛マークがそのまま失点です。キリのいい数字ほど危険。</p><h3>流れ</h3><p>場に4つの列があります。全員が手札から1枚を<b>同時に</b>選び、小さい数字の人から順に置いていきます。<br>置く列は選べません。<b>自分の数字より小さく、かつ最も近い数字が末尾にある列</b>に自動的に置かれます。</p><h3>引き取り</h3><p>列は5枚まで。<b>6枚目を置くことになった人が、その列の5枚をすべて引き取ります</b>（＝失点）。<br>引き取ったあと、その列は自分のカード1枚だけになります。</p><h3>どの列にも置けないとき</h3><p>自分のカードが<b>どの列の末尾よりも小さい</b>場合、好きな列を1つ選んで引き取ります。<br>手札に小さい数字を抱え込んでいると、これを強いられます。</p><h3>コツ</h3><p>列が4〜5枚まで伸びていると、次に置いた人が引き取る危険があります。<br>「安い列をわざと引き取って、場をリセットする」のも立派な戦術です。<br>全員同時出しなので、<b>他の人がどの数字を出しそうか</b>を読むゲームです。</p><h3>上級（プロ）ルール</h3><p>ゲーム開始時に選べます。<br>通常は、カードは「末尾が自分より小さく、差が最も近い列」に置かれます。<br><b>プロルールでは、列の先頭（左端）にも置けるようになります</b>。カードより先頭が大きい列なら、その手前に入れられます。<br>置き場所は<b>末尾・先頭を問わず、数値差が最小の場所に自動で決まります</b>（若い数字の人から順に処理）。前置きでその列が<b>6枚目</b>になった人は、通常どおり引き取りです。<br>小さいカードにも置き場所が生まれるぶん、駆け引きが深くなる上級者向けルールです。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない札から相手の手札を推定し（決定化サンプリング）、そこからラウンド終了までを何百回もシミュレーションして、失点の期待値が最小になる札を選びます。<br>すべての可能性を読み切る完全探索ではなく、シミュレーションによる<b>近似</b>です。それでも、単純に「安全そうな列」を選ぶだけのCPU（＝ふつう）と対戦させると、平均失点は 13.2 → 7.6、勝率は 25%（4人戦の基準値）→ 46.7% になります。</p>"}, "gems": {"title": "宝石商", "html": "<p class=\"hgoal\"><b>目的</b>　発展カードで得点を集め、先に15点へ。全員の手番数が揃った時点で集計し、同点ならカード枚数が少ない方の勝ちです。</p><h3>手番でできること（3つのうち1つ）</h3><p><b>① 宝石を取る</b>：違う色を3枚 ／ または同じ色を2枚（山に4枚以上残っている場合のみ）<br><b>② カードを買う</b>：コストを支払って発展カードを購入<br><b>③ カードを確保する</b>：1枚を手元にキープし、金を1枚もらう（最大3枚）</p><h3>ボーナスが雪だるま式に効く</h3><p>買った発展カードは<b>永続の割引</b>になります。白のカードを2枚持っていれば、以後どのカードも白のコストが2つ安くなります。<br>序盤は安いカードでボーナスを増やし、終盤に高得点カードを買うのが基本です。</p><h3>宝石は10枚まで</h3><p>手持ちの宝石が10枚を超えたら超過分を捨てます。取りすぎに注意。</p><h3>貴族</h3><p>上部の貴族タイルは、指定された色のボーナス数を満たすと<b>自動的に訪問し+3点</b>。色を意図的に偏らせる価値があります。</p><h3>金（ワイルド）</h3><p>確保でもらえる金は、どの色の代わりにも使えます。高額カードを買う切り札です。</p><h3>手番順と操作</h3><p>画面上部に<b>手番順</b>が表示されます（金枠が現在の手番）。先手はランダムに決まり、以降その順で時計回りに回ります。<br>宝石をタップして選び「宝石を取る」。同じ宝石を<b>2回タップ</b>で同色2枚になります。金枠のカードは今すぐ買えるカードです。</p><h3>CPUについて</h3><p>つよいCPUは、あなたがあと少しで買えそうな高得点カードを「確保」で横取りしてきます。狙いのカードは早めに押さえましょう。</p>"}, "koibumi": {"title": "恋文", "html": "<p class=\"hgoal\"><b>目的</b>　最後まで生き残るか、山札が尽きたとき最も強いカードを持っていればトークンを1個獲得。<b>先に3個</b>集めた人の勝ちです（第2版の正規ルール）。</p><h3>基本の流れ</h3><p>手札は常に<b>1枚</b>。自分の番に1枚引いて2枚になり、<b>どちらかを場に出して効果を使います</b>。脱落するとそのラウンドは終わりです。</p><h3>カード（数字が大きいほど強い）</h3><p><b>8 姫</b>：捨てたら即脱落。抱え続けるしかない爆弾<br><b>7 伯爵夫人</b>：王か王子と一緒に持っていたら必ずこちらを捨てる<br><b>6 王</b>：相手と手札を交換<br><b>5 王子</b>：誰か1人（自分も可）の手札を捨てさせ引き直させる。姫を捨てさせれば脱落<br><b>4 侍女</b>：次の自分の番まで効果の対象にならない<br><b>3 男爵</b>：相手と手札を比べ、小さい方が脱落<br><b>2 僧侶</b>：相手の手札をこっそり見る<br><b>1 兵士</b>：相手を指名して手札を推理（兵士以外）。的中で脱落させられる</p><h3>情報が命</h3><p>僧侶で見た手札は、その相手の欄に表示され続けます（手札が変わるまで）。<br>捨て札は全員分ずっと見えているので、<b>残りカードを数えれば</b>兵士の推理精度が上がります。<br>ヘッダーの<b>「内訳」</b>ボタンで、16枚の構成と残り枚数がいつでも確認できます。</p><h3>山札が尽きたら</h3><p>生き残った人が手札を公開し、<b>最も強いカードの人が勝ち</b>。<br>同じ数字で並んだ場合は<b>引き分け</b>となり、その全員がトークンを獲得します。</p><h3>CPUについて</h3><p>つよいCPUは、捨て札から残りカードを数えて兵士の推理を確率計算し、僧侶や王で得た情報を最後まで覚えています。</p>"}, "hannin": {"title": "踊る容疑者", "html": "<p class=\"hgoal\"><b>目的</b>　犯人カードの持ち主を暴けば探偵側の勝ち。犯人が最後の1枚として犯人カードを出せたら犯人の勝ちです。</p><h3>まず知っておくこと</h3><p><b>犯人は固定されていません。</b>犯人カードは取り引き・うわさ・情報操作で人から人へ移ります。<br>いま持っている人が犯人。さっきまで犯人だった人が今は無関係、ということも普通に起こります。</p><h3>勝ち方は3つ</h3><p><b>① 探偵</b>で犯人カードの持ち主を指名して当てる<br><b>② いぬ</b>で相手の手札から犯人カードを引き当てる<br><b>③ 犯人カードを、手札が最後の1枚になったときに出す</b>（逃げ切り）</p><h3>重要：アリバイ</h3><p>犯人カードを持っていても、<b>アリバイを一緒に持っていれば探偵に指名されても「いいえ」と言えます</b>。<br>逆に、アリバイを持たない犯人は探偵に怯えることになります。</p><h3>主なカード</h3><p><b>探偵</b>：1人を指名（最初の一巡では使用不可） ／ <b>いぬ</b>：1人の手札からランダムに1枚<br><b>目撃者</b>：1人の手札を全部見る ／ <b>少年</b>：いま犯人カードを持つ人を自分だけが知る<br><b>取り引き</b>：1人と1枚ずつ裏向きで交換 ／ <b>うわさ</b>：全員が右隣からランダムに1枚<br><b>情報操作</b>：全員が1枚選んで左隣へ ／ <b>たくらみ</b>：以後、犯人と運命共同体<br><b>アリバイ</b>：持つ限り探偵を否認できる ／ <b>一般人</b>：何も起こらない</p><h3>たくらみの罠</h3><p>たくらみを出した人は犯人の味方です。<b>たくらみ済の人が探偵で犯人を当てても、道連れで負けます</b>。</p><h3>画面の見方</h3><p>上部の<b>円</b>が席順です。あなたは常に下、手番は<b>時計回り</b>に進みます。<br>「うわさ」は<b>右隣（前の手番の人）</b>から引き、「情報操作」は<b>左隣（次の手番の人）</b>へ渡します。<br>あなたが得た情報（見た手札、少年情報、受け取った札、犯人カードが自分に来た警告）は、手札の上のメモ欄に残ります。</p><h3>CPUについて</h3><p>つよいCPUは、犯人カードを渡した相手を記憶し、うわさや取り引きで動くたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>"}, "jackal": {"title": "ジャッカル", "html": "<p class=\"hgoal\"><b>目的</b>　自分のカードだけが見えない状態で「全員の合計以下」の数を宣言し続けるチキンレース。ライフを3回失うと脱落、最後まで残れば勝ちです。</p><h3>自分のカードだけ見えない</h3><p>全員が1枚ずつカードを引き、<b>自分だけ見えないように額に掲げます</b>。<br>他の人のカードは全部見えるので、<b>見えている合計＋自分の未知の1枚</b>を推理することになります。</p><h3>流れ</h3><p>手番の人は、全員の合計以下だと思う数を宣言します。次の人は<b>それより大きい数を宣言</b>するか、「ジャッカル！」と疑うかを選びます。</p><h3>「ジャッカル！」で疑う</h3><p>直前の宣言が合計を<b>超えている</b>と思ったら宣言します。全員がカードを公開して答え合わせ。<br>宣言 > 合計 なら<b>宣言した人</b>がライフを失い、宣言 ≦ 合計 なら<b>疑った人</b>がライフを失います。</p><h3>カード構成（36枚）</h3><p>1〜5が各4枚 ／ 0・10が各3枚 ／ -5・15が各2枚 ／ -10・20が各1枚<br>特殊カードが各1枚：<b>×2</b>（合計を2倍） ／ <b>MAX→0</b>（最大の数字を0にする） ／ <b>夜0</b>（0として扱い、次から山札を作り直す） ／ <b>?</b>（公開時に山札から1枚追加）</p><h3>コツ</h3><p>使ったカードは捨て札に残り、画面下でいつでも見られます。<b>20や-10が既に出ているか</b>を数えれば、自分のカードの見当がつきます。<br>ヘッダーの<b>「内訳」</b>ボタンで、36枚の構成と、どれが既に出たかを一覧できます。<br>また、みんなが妙に高い数を言うなら、あなたが大きい数字を持っている可能性が高いです。</p><h3>CPUについて</h3><p>つよいCPUは捨て札を数え、自分のカードの確率分布から合計の期待値を計算します。時々つり上げのブラフも打ってきます。</p>"}, "gokipoker": {"title": "むしポーカー", "html": "<p class=\"hgoal\"><b>目的</b>　「一人負け」を決めるゲーム。同じ生き物を4枚（2人戦は5枚）引き取るか、8種類すべて引き取るか、手札が尽きて出せなくなった人の負けです。</p><h3>流れ</h3><p>手番の人は手札から1枚を裏向きで誰かに渡し、<b>「これは○○です」と宣言</b>します。<b>本当でも嘘でもOK</b>。</p><h3>受け取った人の選択肢</h3><p><b>①「本当だ」または「嘘だ」と答える</b> → カードを公開。<br>　当てられたら<b>渡した人</b>が引き取り、外したら<b>自分</b>が引き取ります。<br><b>② 覗いて回す</b> → 自分だけカードを確認し、まだ見ていない人に回します。宣言は変えてもOK。<br>　ただし<b>全員が見てしまったら、最後の人は必ず答えなければなりません</b>。</p><h3>引き取ったら</h3><p>そのカードは表向きで自分の前に置かれ、全員に見えます。引き取った人が次の親になります。</p><h3>数えることが最大のコツ</h3><p>各生き物は8枚ずつしかありません。<b>場に見えている枚数＋自分の手札の枚数</b>を数えて、残りが0なら、その宣言は<b>確実に嘘</b>です。<br>ヘッダーの<b>「内訳」</b>ボタンを押すと、この計算を自動でやってくれます。</p><h3>押し付け合いの読み合い</h3><p>相手が3枚集めている生き物を、<b>本当のことを言って</b>渡すのが強力です。相手は怖くて「嘘だ」と言いたくなり、外して引き取ってしまいます。</p><h3>CPUについて</h3><p>つよいCPUは残り枚数を数えて確実な嘘を見抜き、あなたが3枚集めている生き物を狙って押し付けてきます。</p>"}, "kotori": {"title": "ことりならべ", "html": "<p class=\"hgoal\"><b>目的</b>　手札をいち早く出し切る「大富豪」系のゲーム。最後まで残るとペンギンを失い、2個失うと脱落。最後まで生き残れば勝ちです。</p><h3>手札は並べ替えできない</h3><p>配られた手札は<b>並び順を変えられません</b>。この制約がこのゲームの肝です。<br>だから最初はバラバラで、大きな役が作れません。</p><h3>カードの出し方</h3><p>自分の番に、手札からカードを出します。<b>手札で隣り合っている同じ数字は、まとめて出せます</b>（例：3が3枚並んでいれば3枚出し）。<br>場に出ているカードより<b>強い役</b>しか出せません。出せない・出したくないときはパスします。</p><h3>役の強さ</h3><p><b>枚数が多いほど強い</b>（1が2枚 ＞ 7が1枚）。<br><b>同じ枚数なら、数字が大きいほど強い</b>（7が2枚 ＞ 3が2枚）。</p><h3>カードを回収して手札を育てる（重要）</h3><p>手札を強化する方法が2つあります。<br>①<b>カードを出したとき</b>：直前に場にあったカードを「手札に加える」か「捨てる」か選べます。<br>②<b>パスしたとき</b>：山札から1枚引き、「手札に加える」か「捨てる」か選べます。<br>加えるときは絵をタップして同じ数字の隣に差し込み、<b>大きな役を育てられます</b>。並べ替えできないぶん、これが手札を強化する手段です。</p><h3>場が流れる</h3><p>カードを出した人以外の全員がパスをして、再びその人の番が来たら、場のカードは全て捨てられ、その人から好きなカードを出せます。</p><h3>勝敗</h3><p>手札を出し切った人から順に「あがり」。最後まで残った人がペンギンを1個失います。<br>ペンギンを2個失うと脱落。生き残れば勝ちです。</p><h3>CPUについて</h3><p>つよいCPUは、場のカードを回収して手札を育て、大きな役は温存し、終盤に一気に出し切る動きをします。</p>"}, "pengin": {"title": "ぺんぎんの山", "html": "<p class=\"hgoal\"><b>目的</b>　手札のペンギンをピラミッドに置いて、いち早く出し切るゲーム。置けずに残った手札がシャチチップ（失点）になります。人数分のラウンドを終えて、失点が最も少ない人の勝ちです。</p><h3>カード</h3><p>5色のペンギンが各7枚、全35枚。色だけが意味を持ちます。</p><h3>ピラミッドを積む</h3><p>手番に手札から1枚をピラミッドに置きます。<br><b>最下段</b>は好きな色を置けます（最大8枚、2人・5人時は7枚）。左から順に埋まります。</p><h3>上の段のルール（重要）</h3><p>上の段に置けるのは、<b>すぐ真下で隣り合う2枚のうち、どちらかと同じ色</b>のときだけです。<br>たとえば下が「赤・青」なら、その上には赤か青しか置けません。<br>土台にない色は、上に積むことができません。</p><h3>置けなくなったら脱落</h3><p>自分の番に、手札のどのカードも置けなくなったら<b>脱落</b>。残った手札の枚数分シャチチップ（失点）を受け取ります。</p><h3>勝敗</h3><p>全員が脱落するか、誰かが出し切るとラウンド終了。人数分のラウンドを行い、<b>シャチチップの合計が最も少ない人</b>の勝ちです。</p><h3>コツ</h3><p>「まだ積める色」「その色の残り枚数」「自分の手札」を見比べるゲームです。<br>自分が多く持つ色を土台に置いて上に伸ばせるようにし、逆に相手が持っていそうな色は土台から締め出すのが基本です。</p><h3>CPUについて</h3><p>つよいCPUは、まだ場に出ていない各色の枚数を数え、自分の色を通しやすく、相手の色を詰まらせるように置いてきます。</p>"}, "keizai": {"title": "はたらく街", "html": "<p class=\"hgoal\"><b>目的</b>　9ラウンドを終えたときの資産で競います。<b>最終得点＝建物の勝利点＋所持金−未払い賃金×3</b>。</p><h3>ラウンドの流れ</h3><p>先手から時計回りに、<b>労働者を1人ずつ職場に置いて</b>いきます。全員が全労働者を置いたら、<b>労働者1人あたりの賃金</b>を支払い、労働者を手元に戻して次のラウンドへ。</p><h3>賃金は上がり続ける</h3><p>R1-2は2、R3-5は3、R6-7は4、R8-9は5。研修中の労働者にも払います。所持金で払えないと<b>建物を売却</b>して充当し、それでも足りない分が<b>未払い賃金</b>（1につき−3点）になります。</p><h3>売った建物は全員のものになる</h3><p>自分が建てた建物は、自分だけが職場として使えます。ただし<b>賃金支払いで売却すると、全員が使えるようになります</b>。稼ぎ頭を手放すと相手に塩を送ることになります。</p><h3>家計という共有の財布</h3><p>露店・市場などの換金の職場は、<b>家計から</b>お金をもらいます。家計が空なら1円ももらえません。家計にお金が入るのは、みんなが払った<b>賃金</b>と、建設で支払われた<b>カード</b>の分です。</p><h3>消費財が経済を回す</h3><p>農場や大農園を使うと<b>消費財</b>が手に入ります。消費財は山札を消費せず、建設コストの支払いにも換金にも使えます。<b>農場を建てて毎ラウンド使う</b>のが、賃金上昇に耐える基本の形です。</p><h3>労働者を増やすかどうか</h3><p>学校で3人、高等学校で4人、大学で5人まで増やせます（翌ラウンドから稼働。専門学校だけ即戦力）。手数は増えますが<b>賃金も人数分かかります</b>。収入を生む建物がないまま増やすと、赤字になります。</p><h3>カードのマーク</h3><p>🌾農園（開拓民で無料建設できる対象）／🏭工場／🏬商店／🔑売却できない。手札をタップすると効果とマークが見られます。</p><h3>置けない職場</h3><p>職場カードの右下に理由が出ます。「🚫 ○○が使用中」なら他プレイヤーが埋めており、「⛔」なら条件不足（手札が足りない、家計が空、労働者の人数が合わない等）です。</p><h3>CPUについて</h3><p>建設・換金・増員・カード補充のそれぞれに価値を付け、賃金の支払い見込みと残りラウンド数から選びます。難易度で建設の重視度と目標労働者数が変わります。</p>"}};
 function showHelp(id){
   const r=RULES[id];
   document.getElementById("helptitle").textContent=r.title+" — 遊び方";
@@ -235,7 +239,7 @@ document.getElementById("aboutBtn").onclick=()=>{
 };
 const ABOUT=`
 <h3>ボドゲ集</h3>
-<p>ブラウザで遊べる、CPU対戦のボード／カードゲーム集です。全8作品を収録しています。<br>
+<p>ブラウザで遊べる、CPU対戦のボード／カードゲーム集です。全9作品を収録しています。<br>
 すべてのゲームに難易度3段階（やさしい / ふつう / つよい）、遊び方の説明、対戦履歴があります。<br>
 画面右上（ゲーム中）や下部（ゲーム選択画面）のボタンで、<b>ダーク／ライト</b>の表示を切り替えられます。</p>
 
@@ -247,7 +251,8 @@ const ABOUT=`
 <b>ジャッカル</b> — 自分のカードだけ見えない。全員の合計を推理して数を釣り上げるチキンレース。<br>
 <b>むしポーカー</b> — 「これはカエルです」…嘘か本当か。嫌われ者を押し付け合う純粋なブラフ勝負。<br>
 <b>ことりならべ</b> — 手札は並べ替えできない。場のカードを回収して役を育て、一気に出し切る大富豪系。<br>
-<b>ぺんぎんの山</b> — 5色のペンギンをピラミッドに積む。土台にない色は上に積めない。</p>
+<b>ぺんぎんの山</b> — 5色のペンギンをピラミッドに積む。土台にない色は上に積めない。<br>
+<b>はたらく街</b> — 労働者を職場に送り建物を建てる。賃金は毎ラウンド上がり、払えないと建物を手放すことに。</p>
 
 <h3>CPUについて</h3>
 <p>難易度「つよい」は、それぞれ本気で作ってあります。</p>
@@ -257,6 +262,7 @@ const ABOUT=`
 <p><b>ジャッカル / むしポーカー</b> — 捨て札や場札から残り枚数を数え、確率を計算します。むしポーカーのCPUは、あなたがあと1枚で負ける生き物を「本当のことを言って」押し付けてきます。</p>
 <p><b>踊る容疑者</b> — 犯人カードの受け渡しを追跡し、隠れた交換が起きるたびに容疑者を広げ、探偵の空振りで絞り込みます。</p>
 <p><b>ことりならべ / ぺんぎんの山</b> — 場のカードを回収して手札を育てたり、まだ場に出ていない色を数えて相手を詰まらせる置き方を選びます。</p>
+<p><b>はたらく街</b> — 建設・換金・増員・カード補充に価値を付け、賃金の支払い見込みと残りラウンド数から選びます。CPU同士で各300局試し、平均得点が黒字（4人戦で約+30）になるまで調整しました。</p>
 
 <h3>対戦履歴について</h3>
 <p>履歴はゲームごとに保存されます。既定ではブラウザのローカル保存のため、<b>端末をまたぐと別々の記録</b>になります。<br>
@@ -7421,6 +7427,819 @@ chooseSetup();
 })();
 <\/script>
 
+
+<script>
+/* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
+(function(){
+  function apply(t){ document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark"); }
+  var t=null;
+  try{ t = window.name && window.name.indexOf("theme:")===0 ? window.name.slice(6) : null; }catch(e){}
+  if(!t){ try{ t = localStorage.getItem("bodoge-theme"); }catch(e){} }
+  if(!t){ t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark"; }
+  apply(t);
+  window.addEventListener("message", function(ev){
+    if(ev.data && ev.data.type==="theme") apply(ev.data.value);
+  });
+})();
+<\/script>
+
+</body>
+</html>
+</script>
+<script type="text/plain" id="src-keizai"><!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ナショナルエコノミー簡略版</title>
+<style>
+:root{
+  --bg:#12181F; --panel:#212C39; --panel2:#2B3949; --line:#465872;
+  --ink:#F2F6FA; --ink2:#CFDBE7; --muted:#A6B8CC; --gold:#F0BC5C; --pos:#8AD3A2; --neg:#EC8571;
+  --accent:#7FB3DB;
+  --r:10px;
+}
+html[data-theme="light"]{
+  --bg:#F5F2EB; --panel:#FFFFFF; --panel2:#EFEBE1; --line:#D9D3C5;
+  --ink:#1D242C; --ink2:#3A4552; --muted:#5E6A78; --gold:#8A5810; --pos:#256E45; --neg:#A34130;
+  --accent:#2F6FA0;
+}
+html[data-theme="light"] .i1{border-color:#7BA05B;color:#3F6B2A}
+html[data-theme="light"] .i2{border-color:#B08A4A;color:#7A5A18}
+html[data-theme="light"] .i3{border-color:#5B8FB9;color:#255C86}
+html[data-theme="light"] .i0{border-color:#9B7FB0;color:#5E3E76}
+html[data-theme="light"] .pick.on{background:#F6EBD2}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  font-size:15px;line-height:1.5;padding-bottom:env(safe-area-inset-bottom)}
+.num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:560px;margin:0 auto;padding:12px}
+h1{font-size:19px;margin:6px 0 2px;letter-spacing:.04em}
+.sub{color:var(--ink2);font-size:13px;margin-bottom:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);
+  border-radius:8px;padding:9px 12px;cursor:pointer}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg button.on{background:var(--accent);border-color:var(--accent);color:#0E1620;font-weight:600}
+.primary{background:var(--gold);border-color:var(--gold);color:#1A1206;font-weight:700;width:100%;padding:13px}
+.bar{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:9px 12px;margin-bottom:10px}
+.bar b{font-size:17px}
+.stat{display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px;color:var(--ink2)}
+.stat span b{color:var(--ink);font-size:15px}
+.sec-t{font-size:11px;letter-spacing:.14em;color:var(--muted);margin:14px 0 6px}
+.slot{display:block;width:100%;text-align:left;margin-bottom:8px;padding:0;overflow:hidden;
+  border-radius:12px;background:var(--panel);border:1px solid var(--line)}
+.slot .hd{display:flex;align-items:center;gap:8px;padding:10px 11px 8px;background:var(--panel2);
+  border-bottom:1px solid var(--line)}
+.slot .em{font-size:20px;line-height:1}
+.slot .nm{font-weight:700;font-size:15px;flex:1}
+.slot .ind{font-size:11.5px;letter-spacing:.04em;padding:3px 8px;border-radius:99px;
+  border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+.slot .bd{padding:9px 11px 10px;font-size:13.5px;color:var(--ink2)}
+.slot .ft{display:flex;justify-content:space-between;gap:8px;padding:0 11px 10px;font-size:12.5px}
+.slot .cap{color:var(--muted);font-family:ui-monospace,monospace;font-size:12px}
+.slot .why{color:var(--neg)}
+.slot .who{color:var(--gold)}
+.slot.ok{border-color:var(--accent);box-shadow:inset 0 0 0 1px rgba(91,143,185,.35)}
+.slot:disabled{opacity:.82}
+.slot:disabled .nm{color:var(--muted)}
+.slot .why,.slot .who{font-weight:600}
+.slot.mine{border-left:4px solid var(--gold)}
+.slot.pub{border-left:4px solid var(--accent)}
+.slot.shared{border-left:4px solid var(--muted)}
+.i1{border-color:#7FA866;color:#C3E5A9}
+.i2{border-color:#A8905F;color:#EDD6A6}
+.i3{border-color:#6795B5;color:#AFD6EE}
+.i0{border-color:#8C77A0;color:#D9C4EA}
+.hand{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:12px}
+.chip.g{border-color:#4E6B52;color:#A9D6B4}
+.log{font-size:13.5px;color:var(--ink2);max-height:52vh;overflow:auto;margin:0;padding:0;list-style:none;
+  -webkit-overflow-scrolling:touch}
+.log.tall{max-height:none}
+.logbar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.logbar button{padding:5px 10px;font-size:12px}
+.log li{padding:5px 8px;border-bottom:1px solid var(--line);border-radius:6px}
+.log li b{color:var(--ink);font-weight:600}
+.log li.round{background:var(--panel2);color:var(--ink);font-weight:600;
+  border-left:3px solid var(--accent);margin:6px 0 3px}
+.log li.wage{border-left:3px solid var(--gold)}
+.log li.newest{background:var(--panel);border:1px solid var(--accent)}
+.badge{font-size:10px;letter-spacing:.08em;padding:1px 6px;border-radius:99px;
+  border:1px solid var(--accent);color:var(--accent);margin-right:6px;vertical-align:1px}
+.badge.rd{border-color:var(--gold);color:var(--gold)}
+.theme{position:fixed;top:8px;right:10px;z-index:40;padding:6px 10px;font-size:12px;border-radius:99px}
+.ov{position:fixed;inset:0;background:rgba(8,12,17,.82);display:flex;align-items:flex-end;
+  justify-content:center;z-index:50}
+.ov .box{background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 0 0;
+  width:100%;max-width:560px;padding:16px;max-height:82vh;overflow:auto}
+.pick{display:block;width:100%;text-align:left;margin-bottom:7px;padding:11px 12px}
+.pick .t{font-weight:600}
+.pick .d{font-size:13px;color:var(--ink2);margin-top:3px}
+.rank{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+.rank.you{color:var(--gold);font-weight:700}
+.hide{display:none}
+.ann{background:var(--panel2);border:1px solid var(--accent);border-left:4px solid var(--accent);
+  border-radius:var(--r);padding:11px 13px;margin-bottom:10px;font-size:14px;min-height:44px;
+  display:flex;align-items:center}
+.ann.warn{border-color:var(--gold);border-left-color:var(--gold)}
+.ann b{color:var(--gold)}
+button.chip{cursor:pointer}
+.pick.on{border-color:var(--gold);background:#33302099}
+.pick.on .t::before{content:"✓ ";color:var(--gold)}
+.okbtn{width:100%;padding:12px;margin-top:6px;background:var(--gold);border-color:var(--gold);
+  color:#1A1206;font-weight:700}
+button.chip:active{border-color:var(--accent)}
+.tag{font-size:12.5px;color:var(--ink2)}
+@media (prefers-reduced-motion:no-preference){
+  .slot{transition:background .12s}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- SETUP -->
+<div id="setup">
+  <h1>ナショナルエコノミー <span class="tag">簡略版</span></h1>
+  <div class="sub">労働者を職場に送り、建物を建て、9ラウンド後の資産で競います。</div>
+  <div class="card">
+    <div class="sec-t">プレイ人数</div>
+    <div class="row seg" id="segN"></div>
+    <div class="sec-t">CPUの強さ</div>
+    <div class="row seg" id="segL"></div>
+    <div class="sec-t">CPUの手番の速さ</div>
+    <div class="row seg" id="segS"></div>
+  </div>
+  <button class="primary" id="btnStart">ゲームを始める</button>
+  <div class="card" style="margin-top:12px">
+    <div class="sec-t">ルール要点</div>
+    <div style="font-size:13px;color:var(--muted)">
+      毎ラウンド、労働者を1人ずつ職場へ置きます。ラウンド終了時に労働者1人あたりの賃金を支払い、
+      払えなければ建物が売却されます（売った建物は全員が使えるようになります）。
+      足りない分は未払い賃金として1につき−3点。<br><br>
+      最終得点＝建物の勝利点＋所持金−未払い賃金×3
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game" class="hide">
+  <div class="bar">
+    <div><span class="tag">ラウンド</span> <b class="num" id="rd">1</b><span class="tag"> / 9</span></div>
+    <div><span class="tag">賃金</span> <b class="num" id="wg">2</b><span class="tag">／人</span></div>
+    <div><span class="tag">家計</span> <b class="num" id="hh">0</b></div>
+    <div><span class="tag">山札</span> <b class="num" id="dk">0</b><span class="tag">／捨札</span><b class="num" id="dc">0</b></div>
+  </div>
+  <div class="card">
+    <div class="stat">
+      <span>所持金 <b class="num" id="myMoney">0</b></span>
+      <span>労働者 <b class="num" id="myW">2</b></span>
+      <span>残り <b class="num" id="myLeft">2</b></span>
+      <span>建物 <b class="num" id="myB">0</b></span>
+      <span>未払い <b class="num" id="myD">0</b></span>
+    </div>
+    <div class="sec-t">手札</div>
+    <div class="hand" id="myHand"></div>
+  </div>
+  <div class="ann" id="ann">労働者を置く職場を選んでください。</div>
+  <div id="board"></div>
+  <div class="sec-t logbar"><span>記録</span><button id="btnLog">すべて表示</button></div>
+  <ul class="log" id="log"></ul>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="hide">
+  <h1>結果</h1>
+  <div class="card" id="ranks"></div>
+  <button class="primary" id="btnAgain">もう一度</button>
+  <div class="sec-t logbar"><span>対戦履歴</span><button id="btnHist">読み込む</button></div>
+  <div class="card" id="histbody"><div class="tag">「読み込む」を押すと直近20件を表示します。</div></div>
+</div>
+
+</div>
+
+<div id="ov" class="ov hide"><div class="box">
+  <div class="sec-t" id="ovT">選んでください</div>
+  <div id="ovBody"></div>
+</div></div>
+
+<script>
+"use strict";
+/* ============ エンジン ============ */
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+const BUILDINGS=[
+ {id:"nojo",name:"農場",cost:1,vp:6,n:8,farm:1,eff:"shohin2",txt:"消費財2枚"},
+ {id:"yakib",name:"焼畑",cost:1,vp:0,n:2,farm:1,eff:"shohin5self",noSell:1,txt:"消費財5枚・自身は消滅"},
+ {id:"cafe",name:"珈琲店",cost:1,vp:8,n:2,eff:"cash5",txt:"家計から5"},
+ {id:"sekkei",name:"設計事務所",cost:1,vp:8,n:4,eff:"look5pick1",txt:"山5枚見て1枚取る"},
+ {id:"kojo",name:"工場",cost:2,vp:12,n:8,eff:"discard2draw4",txt:"2枚捨て4枚引く"},
+ {id:"kensetsu",name:"建設会社",cost:2,vp:10,n:4,eff:"build_m1",txt:"建設（コスト−1）"},
+ {id:"kaju",name:"果樹園",cost:2,vp:10,n:3,farm:1,eff:"shohin_upto4",txt:"手札4枚まで消費財"},
+ {id:"shataku",name:"社宅",cost:2,vp:8,n:2,eff:"none",noSell:1,passive:1,txt:"労働者上限+1"},
+ {id:"resto",name:"レストラン",cost:3,vp:16,n:2,eff:"discardall_cash15",txt:"手札全部捨て15"},
+ {id:"danoen",name:"大農園",cost:3,vp:12,n:3,farm:1,eff:"shohin3",txt:"消費財3枚"},
+ {id:"kaitaku",name:"開拓民",cost:3,vp:14,n:2,eff:"build_farm_free",txt:"農園建物を無料建設"},
+ {id:"seitetsu",name:"製鉄所",cost:4,vp:20,n:3,eff:"draw3",txt:"3枚引く"},
+ {id:"kagaku",name:"化学工場",cost:4,vp:18,n:2,eff:"draw2or4",txt:"2枚引く（手札0なら4枚）"},
+ {id:"tei",name:"邸宅",cost:4,vp:28,n:1,eff:"none",noSell:1,passive:1,txt:"効果なし"},
+ {id:"jidosha",name:"自動車工場",cost:5,vp:24,n:3,eff:"discard3draw7",txt:"3枚捨て7枚引く"},
+];
+const WAGE=[0,2,2,3,3,3,4,4,5,5];
+const bdef=id=>BUILDINGS.find(b=>b.id===id);
+const MARKS={farm:["🌾","農園","i1"],factory:["🏭","工場","i2"],shop:["🏬","商店","i3"],key:["🔑","売却不可","i0"]};
+// 建物のマーク（農園とカギは確定、工場・商店は推定）
+const BMARK={
+ nojo:["farm"],yakib:["farm","key"],kaju:["farm"],danoen:["farm"],
+ kojo:["factory"],seitetsu:["factory"],kagaku:["factory"],jidosha:["factory"],
+ cafe:["shop"],sekkei:["shop"],resto:["shop"],
+ kensetsu:[],kaitaku:[],shataku:["key"],tei:["key"]};
+// 公共職場は建物ではないので、役割タグを出す
+const ROLE={"pub:saiseki":["⛏️","カードを引く"],"pub:kozan":["⛰️","カードを引く"],
+ "pub:gakko":["🏫","労働者を増やす"],"pub:daiku":["🔨","建設"],
+ "pub:roten":["🧺","換金"],"pub:ichiba":["🏪","換金"],"pub:koto":["🎓","労働者を増やす"],
+ "pub:super":["🛒","換金"],"pub:daigaku":["🎓","労働者を増やす"],"pub:hyakka":["🏬","換金"],
+ "pub:senmon":["📚","労働者を増やす"],"pub:banpaku":["🎪","換金"]};
+const BEMOJI={nojo:"🌾",yakib:"🔥",cafe:"☕",sekkei:"📐",kojo:"🏭",kensetsu:"🏗️",kaju:"🍎",
+ shataku:"🏠",resto:"🍽️",danoen:"🌻",kaitaku:"🧭",seitetsu:"⚙️",kagaku:"⚗️",tei:"🏛️",jidosha:"🚗"};
+const markTags=id=>(BMARK[id]||[]).map(m=>{const[e,n,c]=MARKS[m];
+  return '<span class="ind '+c+'">'+e+n+'</span>';}).join("");
+const CPU_NAMES=["高梨","沢渡","一ノ瀬","桑島","東雲","三村","藤堂","甘利"];
+const CFG={startWorkers:2,startHand:3,startMoneyStart:5,startMoneyOther:6,
+  schoolMax:3,workerCapBase:5,reshuffle:true};
+
+function newGame(n){
+  const pool=shuffle(CPU_NAMES.slice());
+  const players=[];
+  for(let i=0;i<n;i++)players.push({idx:i,cpu:i!==0,name:i===0?"あなた":pool[i-1],
+    hand:[],built:[],money:0,workers:CFG.startWorkers,training:0,debt:0,workersLeft:0});
+  const deck=[];for(const b of BUILDINGS)for(let i=0;i<b.n;i++)deck.push(b.id);
+  const G={players,n,deck:shuffle(deck),discard:[],household:0,publicSold:[],
+    round:0,startPlayer:rnd(n),occupied:{},occBy:{},log:[]};
+  for(const p of players){draw(G,p,CFG.startHand);
+    p.money=(p.idx===G.startPlayer?CFG.startMoneyStart:CFG.startMoneyOther);}
+  G.log.unshift({t:"スタートプレイヤーは <b>"+players[G.startPlayer].name+"</b>（所持金 "+
+    CFG.startMoneyStart+"、ほかは "+CFG.startMoneyOther+"）",k:"round"});
+  return G;
+}
+function draw(G,p,k){for(let i=0;i<k;i++){
+  if(!G.deck.length){if(CFG.reshuffle&&G.discard.length){G.deck=shuffle(G.discard.filter(c=>c!=="shohin"));G.discard=[];}}
+  if(!G.deck.length)break;p.hand.push(G.deck.pop());}}
+function gainShohin(G,p,k){for(let i=0;i<k;i++)p.hand.push("shohin");}
+const dumpVal=c=>c==="shohin"?0:bdef(c).vp;
+function discardN(G,p,n){let d=0;for(let i=0;i<n;i++){if(!p.hand.length)break;
+  let bi=0;for(let j=1;j<p.hand.length;j++)if(dumpVal(p.hand[j])<dumpVal(p.hand[bi]))bi=j;
+  G.discard.push(p.hand[bi]);p.hand.splice(bi,1);d++;}return d;}
+function cashFrom(G,p,amt){const g=Math.min(amt,G.household);G.household-=g;p.money+=g;return g;}
+function workerCap(p){return CFG.workerCapBase+p.built.filter(x=>!x.sold&&x.id==="shataku").length;}
+function tryBuild(G,p,id,opts){opts=opts||{};
+  const b=bdef(id);if(!b)return false;
+  let cost=opts.free?0:Math.max(0,b.cost+(opts.costDelta||0));
+  const hi=p.hand.indexOf(id);if(hi<0)return false;
+  if(p.hand.length-1<cost)return false;
+  p.hand.splice(hi,1);
+  if(opts.payIdx){const idx=opts.payIdx.slice().sort((a,z)=>z-a);
+    for(const i of idx){G.discard.push(p.hand[i]);p.hand.splice(i,1);}}
+  else discardN(G,p,cost);
+  G.household+=cost;p.built.push({id,sold:false});return true;}
+function buildable(G,p,opts){opts=opts||{};
+  const u=[...new Set(p.hand.filter(c=>c!=="shohin"))];
+  return u.filter(c=>{if(opts.farmOnly&&!bdef(c).farm)return false;
+    const cost=opts.free?0:Math.max(0,bdef(c).cost+(opts.costDelta||0));
+    return p.hand.length-1>=cost;});}
+
+function publicList(G){
+  const L=[],n=G.n,R=G.round;
+  L.push({key:"pub:saiseki",name:"採石場",desc:"1枚引く＋次のスタート",cap:n>=2?1:0,run:(G,p)=>{draw(G,p,1);G.nextStart=p.idx;}});
+  L.push({key:"pub:kozan",name:"鉱山",desc:"1枚引く",cap:99,run:(G,p)=>draw(G,p,1)});
+  L.push({key:"pub:gakko",name:"学校",desc:"労働者+1（翌ラウンドから働けます）",cap:1,
+    ok:(G,p)=>p.workers+p.training<CFG.schoolMax&&p.workers+p.training<workerCap(p),
+    why:(G,p)=>"労働者が"+CFG.schoolMax+"人に達しています（4人目は高等学校）",run:(G,p)=>p.training++});
+  L.push({key:"pub:daiku",name:"大工",desc:"手札から建物を建てます",cap:Math.max(1,n-1),build:{},
+    why:()=>"支払いカードが足りず、建てられる建物がありません"});
+  const cash=(k,nm,need,amt)=>L.push({key:"pub:"+k,name:nm,desc:need+"枚捨てて家計から"+amt,
+    cap:n>=3?99:1,ok:(G,p)=>p.hand.length>=need&&G.household>0,cash:{need,amt},
+    why:(G,p)=>p.hand.length<need?"手札が"+need+"枚必要です（今"+p.hand.length+"枚）":"家計が空です"});
+  if(R>=2)cash("roten","露店",1,6);
+  if(R>=3)cash("ichiba","市場",2,12);
+  if(R>=4)L.push({key:"pub:koto",name:"高等学校",desc:"労働者4人へ（翌ラウンドから）",cap:1,
+    ok:(G,p)=>p.workers+p.training===3&&workerCap(p)>=4,
+    why:(G,p)=>p.workers+p.training<3?"労働者が3人のときだけ使えます（今"+(p.workers+p.training)+"人）":"すでに4人以上です",
+    run:(G,p)=>p.training++});
+  if(R>=5)cash("super","スーパー",3,18);
+  if(R>=6)L.push({key:"pub:daigaku",name:"大学",desc:"労働者5人へ（翌ラウンドから）",cap:1,
+    ok:(G,p)=>p.workers+p.training===4&&workerCap(p)>=5,
+    why:(G,p)=>p.workers+p.training<4?"労働者が4人のときだけ使えます（今"+(p.workers+p.training)+"人）":"すでに5人以上です",
+    run:(G,p)=>p.training++});
+  if(R>=7)cash("hyakka","百貨店",4,24);
+  if(R>=8)L.push({key:"pub:senmon",name:"専門学校",desc:"労働者+1（すぐ働ける）",cap:1,
+    ok:(G,p)=>p.workers+p.training<workerCap(p),
+    why:(G,p)=>"労働者が上限（"+workerCap(p)+"人）です",run:(G,p)=>p.workers++});
+  if(R>=9)cash("banpaku","万博",5,30);
+  return L;
+}
+function actionsFor(G,p){
+  const a=[];
+  for(const w of G.pub){
+    if((G.occupied[w.key]||0)>=w.cap)continue;
+    if(w.ok&&!w.ok(G,p))continue;
+    if(w.build&&!buildable(G,p,{}).length)continue;
+    a.push({key:w.key,name:w.name,desc:w.desc||"",kind:w.build?"build":"public"});
+  }
+  p.built.forEach((x,i)=>{if(x.sold)return;const b=bdef(x.id);if(b.passive)return;
+    const k="priv:"+p.idx+":"+i;if(G.occupied[k])return;
+    if(b.eff==="build_m1"&&!buildable(G,p,{costDelta:-1}).length)return;
+    if(b.eff==="build_farm_free"&&!buildable(G,p,{free:1,farmOnly:1}).length)return;
+    a.push({key:k,name:b.name,desc:b.txt,kind:"own",cardId:x.id});});
+  G.publicSold.forEach((x,i)=>{const b=bdef(x.id);if(b.passive)return;
+    const k="sold:"+i;if(G.occupied[k])return;
+    if(b.eff==="build_m1"&&!buildable(G,p,{costDelta:-1}).length)return;
+    if(b.eff==="build_farm_free"&&!buildable(G,p,{free:1,farmOnly:1}).length)return;
+    a.push({key:k,name:b.name,desc:b.txt,kind:"shared",cardId:x.id});});
+  return a;
+}
+function payWages(G,p){
+  let due=WAGE[G.round]*(p.workers+p.training);
+  const fm=Math.min(p.money,due);p.money-=fm;due-=fm;G.household+=fm;
+  const sold=[];
+  if(due>0){
+    const asc=p.built.filter(x=>!x.sold&&!bdef(x.id).noSell)
+      .sort((a,z)=>bdef(a.id).vp-bdef(z.id).vp);
+    for(const x of asc){if(due<=0)break;const v=bdef(x.id).vp;
+      x.sold=true;sold.push(x.id);G.publicSold.push({id:x.id});
+      const pay=Math.min(v,due);due-=pay;G.household+=pay;if(v>pay)p.money+=v-pay;}
+  }
+  let debt=0;if(due>0){debt=due;p.debt+=due;}
+  return {sold,debt};
+}
+const finalScore=p=>p.built.reduce((s,x)=>s+(x.sold?0:bdef(x.id).vp),0)+p.money-p.debt*3;
+
+/* ============ CPU ============ */
+const LEVELS={easy:{tw:2,bias:1.0,av:5,mine:0},normal:{tw:3,bias:1.3,av:6,mine:1},hard:{tw:3,bias:1.5,av:6,mine:2}};
+const cardVal=c=>c==="shohin"?0.8:1+bdef(c).vp*0.08;
+function cpuPickBuild(G,p,opts){
+  const c=buildable(G,p,opts||{});if(!c.length)return null;
+  let best=null,bv=-1e9;
+  for(const id of c){const b=bdef(id);
+    const cost=(opts&&opts.free)?0:Math.max(0,b.cost+((opts&&opts.costDelta)||0));
+    const use={seitetsu:6,kojo:5,jidosha:6,kagaku:5,kensetsu:7,kaitaku:6,nojo:5,danoen:6,kaju:4,cafe:4,resto:5,sekkei:3,shataku:1,tei:0,yakib:2}[id]||0;
+    const late=G.round>=7?0.4:1;
+    const v=b.vp+use*late-cost*3;
+    if(v>bv){bv=v;best=id;}}
+  return best;
+}
+function cpuScore(G,p,a,L){
+  const due=WAGE[G.round]*(p.workers+p.training);
+  const short=Math.max(0,due-p.money),left=10-G.round,h=p.hand.length;
+  if(a.kind==="build"||a.cardId==="kensetsu"||a.cardId==="kaitaku"){
+    const o=a.cardId==="kensetsu"?{costDelta:-1}:(a.cardId==="kaitaku"?{free:1,farmOnly:1}:{});
+    const c=cpuPickBuild(G,p,o);if(!c)return -100;
+    const b=bdef(c),cost=o.free?0:Math.max(0,b.cost+(o.costDelta||0));
+    return b.vp*L.bias-cost*1.5+4;
+  }
+  if(a.key==="pub:gakko"||a.key==="pub:koto"||a.key==="pub:daigaku"){
+    if(p.workers+p.training>=L.tw)return -50;
+    if(left<=3)return -50;
+    let ew=0;for(let r=G.round;r<=9;r++)ew+=WAGE[r];
+    return (left-1)*L.av-ew*1.2;
+  }
+  if(a.key==="pub:senmon"){let ew=0;for(let r=G.round;r<=9;r++)ew+=WAGE[r];return left*L.av-ew*1.2+3;}
+  const T={roten:[1,6],ichiba:[2,12],super:[3,18],hyakka:[4,24],banpaku:[5,30]};
+  const ck=Object.keys(T).find(k=>a.key==="pub:"+k);
+  if(ck){const [need,amt]=T[ck];const got=Math.min(amt,G.household);if(got<=0)return -100;
+    const lost=p.hand.slice().sort((x,y)=>cardVal(x)-cardVal(y)).slice(0,need).reduce((s,c)=>s+cardVal(c),0);
+    return got-lost*2.5+(short>0?8:0);}
+  if(a.key==="pub:saiseki")return 2.2+(h<4?1:0);
+  if(a.key==="pub:kozan")return 2+(h<3?1.5:0);
+  if(a.cardId){const e=bdef(a.cardId).eff;
+    const own=a.kind==="own"?L.mine:0;
+    switch(e){
+      case "draw3":return 6+own;
+      case "discard3draw7":return h>=3?7+own:-50;
+      case "discard2draw4":return h>=2?4.5+own:-50;
+      case "draw2or4":return (h===0?7:4)+own;
+      case "look5pick1":return 3+own;
+      case "shohin2":return 4.6+own;
+      case "shohin3":return 5.6+own;
+      case "shohin_upto4":return Math.max(0,4-h)*1.2+own;
+      case "shohin5self":return 5+own;
+      case "cash5":{const g=Math.min(5,G.household);return g+(short>0?6:0);}
+      case "discardall_cash15":{const g=Math.min(15,G.household);
+        return g-p.hand.reduce((s,c)=>s+cardVal(c),0)*2+(short>0?6:0);}
+      default:return .5;}}
+  return .5;
+}
+
+/* ============ 進行 ============ */
+let G=null,LV="normal",NP=4,busy=false,SPD=1100;
+const $=id=>document.getElementById(id);
+const logIt=(t,k)=>{G.log.unshift({t,k:k||"act"});if(G.log.length>400)G.log.pop();};
+
+function startRound(){
+  G.round++;G.pub=publicList(G);G.occupied={};G.occBy={};G.nextStart=null;
+  for(const p of G.players){p.workers+=p.training;p.training=0;p.workersLeft=p.workers;}
+  logIt("ラウンド"+G.round+" 開始（賃金 "+WAGE[G.round]+"／人・先手 "+G.players[G.startPlayer].name+"）","round");
+  announce("ラウンド "+G.round+" 開始。賃金は1人あたり "+WAGE[G.round]+
+    "。手番は <b>"+G.players[G.startPlayer].name+"</b> から。");
+  G.cur=G.startPlayer;render();step();
+}
+function step(){
+  if(G.players.every(p=>p.workersLeft<=0)){wagePhase();return;}
+  const p=G.players[G.cur];
+  if(p.workersLeft<=0){G.cur=(G.cur+1)%G.n;step();return;}
+  const acts=actionsFor(G,p);
+  if(!acts.length){p.workersLeft=0;G.cur=(G.cur+1)%G.n;step();return;}
+  if(p.cpu){busy=true;render();
+    setTimeout(()=>{const L=LEVELS[LV];
+      let best=acts[0],bv=-1e9;
+      for(const a of acts){const v=cpuScore(G,p,a,L);if(v>bv){bv=v;best=a;}}
+      perform(p,best,()=>{p.workersLeft--;sayAction();G.cur=(G.cur+1)%G.n;busy=false;step();});
+    },SPD);
+  } else {busy=false;render();}
+}
+function humanAct(a){
+  if(busy)return;const p=G.players[0];if(p.workersLeft<=0)return;
+  busy=true;
+  perform(p,a,()=>{p.workersLeft--;sayAction();G.cur=(G.cur+1)%G.n;busy=false;step();});
+}
+function perform(p,a,done){
+  G.occupied[a.key]=(G.occupied[a.key]||0)+1;
+  (G.occBy[a.key]=G.occBy[a.key]||[]).push(p.name);
+  const nm=p.name;
+  if(a.kind==="public"||a.kind==="build"){
+    const w=G.pub.find(w=>w.key===a.key);
+    if(w.build){
+      doBuild(p,{},id=>{if(id)logIt(nm+"：大工で <b>"+bdef(id).name+"</b> を建設");done();});
+      return;
+    }
+    if(w.cash){
+      const fin2=()=>{const g=cashFrom(G,p,w.cash.amt);logIt(nm+"："+w.name+"（+"+g+"）");done();};
+      if(p.cpu){discardN(G,p,w.cash.need);return fin2();}
+      return humanDiscard(p,w.cash.need,w.name+"：家計から最大"+w.cash.amt+"。捨てたカードは共通の捨札へ",fin2);
+    }
+    const before=p.money;w.run(G,p);
+    const gain=p.money-before;
+    logIt(nm+"："+w.name+(gain?"（+"+gain+"）":""));
+    done();return;
+  }
+  runEffect(p,a.cardId,()=>{done();});
+}
+function runEffect(p,id,done){
+  const b=bdef(id),nm=p.name;
+  const fin=extra=>{logIt(nm+"："+b.name+(extra||""));done();};
+  switch(b.eff){
+    case "shohin2":gainShohin(G,p,2);return fin("（消費財2）");
+    case "shohin3":gainShohin(G,p,3);return fin("（消費財3）");
+    case "shohin5self":{gainShohin(G,p,5);
+      const i=p.built.findIndex(x=>x.id==="yakib"&&!x.sold);if(i>=0)p.built.splice(i,1);
+      return fin("（消費財5・消滅）");}
+    case "shohin_upto4":{const k=Math.max(0,4-p.hand.length);gainShohin(G,p,k);return fin("（消費財"+k+"）");}
+    case "cash5":{const g=cashFrom(G,p,5);return fin("（+"+g+"）");}
+    case "draw3":draw(G,p,3);return fin("（3枚）");
+    case "draw2or4":{const k=p.hand.length===0?4:2;draw(G,p,k);return fin("（"+k+"枚）");}
+    case "discard2draw4":
+      if(p.cpu){discardN(G,p,2);draw(G,p,4);return fin("（2捨4引）");}
+      return humanDiscard(p,2,"この後4枚引きます。捨てたカードは共通の捨札へ",()=>{draw(G,p,4);fin("（2捨4引）");});
+    case "discard3draw7":
+      if(p.cpu){discardN(G,p,3);draw(G,p,7);return fin("（3捨7引）");}
+      return humanDiscard(p,3,"この後7枚引きます。捨てたカードは共通の捨札へ",()=>{draw(G,p,7);fin("（3捨7引）");});
+    case "discardall_cash15":{discardN(G,p,p.hand.length);const g=cashFrom(G,p,15);return fin("（+"+g+"）");}
+    case "look5pick1":{
+      const seen=[];for(let i=0;i<5&&G.deck.length;i++)seen.push(G.deck.pop());
+      if(!seen.length)return fin("（山なし）");
+      const after=pick=>{p.hand.push(pick);for(const c of seen)if(c!==pick)G.discard.push(c);
+        fin("（"+bdef(pick).name+"を取得）");};
+      if(p.cpu){let best=seen[0],bv=-1e9;
+        for(const c of seen){const v=bdef(c).vp-bdef(c).cost*2;if(v>bv){bv=v;best=c;}}after(best);}
+      else openPick("山札の5枚から1枚",seen.map(c=>({id:c,t:bdef(c).name,
+        d:"コスト"+bdef(c).cost+"・"+bdef(c).vp+"点／"+bdef(c).txt})),sel=>after(sel));
+      return;}
+    case "build_m1":return doBuild(p,{costDelta:-1},sel=>{
+      sel?fin("→ <b>"+bdef(sel).name+"</b>"):fin();});
+    case "build_farm_free":return doBuild(p,{free:1,farmOnly:1},sel=>{
+      sel?fin("→ <b>"+bdef(sel).name+"</b>（無料）"):fin();});
+    default:return fin();
+  }
+}
+function doBuild(p,opts,cb){
+  const cands=buildable(G,p,opts);
+  if(!cands.length)return cb(null);
+  const cost=id=>opts.free?0:Math.max(0,bdef(id).cost+(opts.costDelta||0));
+  if(p.cpu){const id=cpuPickBuild(G,p,opts);
+    if(id)tryBuild(G,p,id,opts);return cb(id);}
+  openPick("建てる建物を選ぶ",cands.map(c=>({id:c,t:bdef(c).name+"（"+bdef(c).vp+"点）",
+    d:"支払い"+cost(c)+"枚／"+bdef(c).txt})),sel=>{
+      if(!sel)return cb(null);
+      const need=cost(sel);
+      if(need<=0){tryBuild(G,p,sel,opts);return cb(sel);}
+      const rest=p.hand.slice();rest.splice(rest.indexOf(sel),1);
+      if(rest.length<=need){tryBuild(G,p,sel,opts);return cb(sel);}
+      const tmp=Object.assign({},opts);
+      openMulti(bdef(sel).name+" の支払い","捨てたカードは共通の捨札へ（山が尽きたら切り直して戻ります）。枚数分の $ が家計に入ります",rest,need,idx=>{
+        tmp.payIdx=idx;tryBuild(G,p,sel,tmp);cb(sel);});
+    },true);
+}
+function handLabel(c){return c==="shohin"?{t:"消費財",d:"勝利点なし。支払いや換金に使うカード"}
+  :{t:bdef(c).name,d:"コスト"+bdef(c).cost+"・"+bdef(c).vp+"点／"+bdef(c).txt};}
+function openMulti(title,note,hand,need,cb){
+  $("ovT").textContent=title;
+  const box=$("ovBody");box.innerHTML="";
+  const sel=new Set();
+  const info=document.createElement("div");info.className="tag";
+  info.style.margin="0 0 8px";box.appendChild(info);
+  const ok=document.createElement("button");ok.className="okbtn";
+  const upd=()=>{info.textContent=note+"（"+sel.size+" / "+need+" 枚選択）";
+    ok.disabled=sel.size!==need;ok.textContent=sel.size===need?"これで確定":"あと"+(need-sel.size)+"枚";};
+  hand.forEach((c,i)=>{const L=handLabel(c);
+    const b=document.createElement("button");b.className="pick";
+    b.innerHTML='<div class="t">'+L.t+'</div><div class="d">'+L.d+'</div>';
+    b.onclick=()=>{if(sel.has(i)){sel.delete(i);b.classList.remove("on");}
+      else{if(sel.size>=need)return;sel.add(i);b.classList.add("on");}upd();};
+    box.appendChild(b);});
+  ok.onclick=()=>{if(sel.size!==need)return;$("ov").classList.add("hide");cb([...sel]);};
+  box.appendChild(ok);upd();
+  $("ov").classList.remove("hide");
+}
+function humanDiscard(p,n,note,cb){
+  if(n<=0)return cb();
+  if(p.hand.length<=n){const all=p.hand.slice();for(const c of all)G.discard.push(c);p.hand=[];return cb();}
+  openMulti("捨てるカードを選ぶ",note,p.hand,n,idx=>{
+    idx.slice().sort((a,z)=>z-a).forEach(i=>{G.discard.push(p.hand[i]);p.hand.splice(i,1);});cb();});
+}
+function openPick(title,items,cb,cancel,cancelText){
+  $("ovT").textContent=title;
+  const box=$("ovBody");box.innerHTML="";
+  items.forEach(it=>{const b=document.createElement("button");
+    b.className="pick";b.innerHTML='<div class="t">'+it.t+'</div><div class="d">'+it.d+'</div>';
+    b.onclick=()=>{$("ov").classList.add("hide");cb(it.id);};box.appendChild(b);});
+  if(cancel){const b=document.createElement("button");b.className="pick";
+    b.innerHTML='<div class="t">'+(cancelText||"やめる")+'</div>'+(cancelText?'':'<div class="d">この労働者は何もしません</div>');
+    b.onclick=()=>{$("ov").classList.add("hide");cb(null);};box.appendChild(b);}
+  $("ov").classList.remove("hide");
+}
+function showCard(c){
+  $("ovT").textContent="カードの効果";
+  const box=$("ovBody");
+  if(c==="shohin"){
+    box.innerHTML='<div class="pick" style="cursor:default"><div class="t">消費財</div>'+
+      '<div class="d">建設コストの支払いや、換金の職場で捨てるカードとして使えます。'+
+      'それ自体に勝利点はありません。捨てると消滅し、山札には戻りません。</div></div>';
+  } else {
+    const b=bdef(c);
+    box.innerHTML='<div class="pick" style="cursor:default"><div class="t">'+b.name+'</div>'+
+      '<div class="d">建設コスト '+b.cost+'枚（このカードとは別に手札を'+b.cost+'枚捨てます）<br>'+
+      '勝利点 '+b.vp+'点<br>マーク：'+((BMARK[c]||[]).length?(BMARK[c]).map(m=>MARKS[m][0]+MARKS[m][1]).join("・"):"なし")+'<br>'+
+      '効果：'+b.txt+(b.passive?'（職場としては使いません）':'（自分の労働者を置いて使います）')+'</div></div>';
+  }
+  const btn=document.createElement("button");btn.className="pick";
+  btn.innerHTML='<div class="t">閉じる</div>';
+  btn.onclick=()=>$("ov").classList.add("hide");box.appendChild(btn);
+  $("ov").classList.remove("hide");
+}
+function announce(t,warn){const el=$("ann");el.innerHTML=t;el.className="ann"+(warn?" warn":"");}
+function sayAction(){const t=(G.log[0]||{}).t||"";const i=t.indexOf("：");
+  announce(i>0?t.slice(0,i)+" は "+t.slice(i+1):t);}
+
+function wagePhase(){
+  let i=0;
+  const nextP=()=>{
+    if(i>=G.n){finishWage();return;}
+    payWagesUI(G.players[i++],nextP);
+  };
+  nextP();
+}
+function payWagesUI(p,cb){
+  const wage=WAGE[G.round],total=p.workers+p.training;
+  let due=wage*total;
+  const fm=Math.min(p.money,due);p.money-=fm;due-=fm;G.household+=fm;
+  const sold=[];
+  const finish=()=>{
+    let t=p.name+"：賃金"+(wage*total);
+    if(sold.length)t+=" ／売却 "+sold.map(x=>bdef(x).name).join("・");
+    if(due>0){p.debt+=due;t+=" ／<b>未払い"+due+"</b>";}
+    logIt(t,"wage");render();cb();
+  };
+  const doSell=x=>{const v=bdef(x.id).vp;x.sold=true;sold.push(x.id);G.publicSold.push({id:x.id});
+    const pay=Math.min(v,due);due-=pay;G.household+=pay;if(v>pay)p.money+=v-pay;loop();};
+  const loop=()=>{
+    if(due<=0)return finish();
+    const c=p.built.filter(x=>!x.sold&&!bdef(x.id).noSell);
+    if(!c.length)return finish();
+    if(p.cpu){c.sort((a,z)=>bdef(a.id).vp-bdef(z.id).vp);return doSell(c[0]);}
+    announce("賃金が <b>"+due+"</b> 不足しています。売る建物を選んでください。",true);
+    render();
+    openPick("賃金 "+due+" が不足：売る建物を選ぶ",
+      c.map((x,ix)=>({id:ix,t:bdef(x.id).name+"（売却額 "+bdef(x.id).vp+"）",
+        d:bdef(x.id).txt+"／売ると全員が使えるようになります"})),
+      sel=>{if(sel===null)return finish();doSell(c[sel]);},
+      true,"売らずに未払いにする（1につき−3点）");
+  };
+  loop();
+}
+function finishWage(){
+  if(G.nextStart!==null)G.startPlayer=G.nextStart;
+  announce("ラウンド"+G.round+" の賃金を支払いました。");
+  render();
+  if(G.round>=9){setTimeout(showResult,SPD);return;}
+  setTimeout(startRound,SPD+300);
+}
+function showResult(){
+  $("game").classList.add("hide");$("result").classList.remove("hide");
+  const rows=G.players.map(p=>({p,s:finalScore(p)})).sort((a,b)=>b.s-a.s);
+  try{ saveRecord({ts:Date.now(),np:G.n,lv:({easy:"やさしい",normal:"ふつう",hard:"つよい"}[LV]||LV),
+    you:finalScore(G.players[0]),win:rows[0].p.name,
+    scores:rows.map(r=>({n:r.p.name,s:r.s}))}); }catch(e){}
+  $("ranks").innerHTML=rows.map((r,i)=>{
+    const vp=r.p.built.reduce((s,x)=>s+(x.sold?0:bdef(x.id).vp),0);
+    return '<div class="rank'+(r.p.idx===0?" you":"")+'"><span>'+(i+1)+'位　'+r.p.name+
+      '</span><span class="num">'+r.s+'点</span></div>'+
+      '<div class="tag" style="padding-bottom:6px">建物'+vp+'＋現金'+r.p.money+
+      (r.p.debt?'−未払い'+r.p.debt+'×3':'')+'</div>';}).join("");
+}
+
+/* ============ 描画 ============ */
+function render(){
+  const p=G.players[0];
+  $("rd").textContent=G.round;$("wg").textContent=WAGE[G.round]||0;
+  $("hh").textContent=G.household;
+  $("dk").textContent=G.deck.length;$("dc").textContent=G.discard.length;
+  $("myMoney").textContent=p.money;
+  $("myW").textContent=p.workers+(p.training?"(+"+p.training+")":"");
+  $("myLeft").textContent=p.workersLeft;
+  $("myB").textContent=p.built.filter(x=>!x.sold).length;
+  $("myD").textContent=p.debt;
+  $("myHand").innerHTML=p.hand.length?p.hand.map((c,i)=>c==="shohin"
+    ?'<button class="chip g" data-c="'+i+'">消費財</button>'
+    :'<button class="chip" data-c="'+i+'">'+(BEMOJI[c]||"")+bdef(c).name+
+      (BMARK[c]||[]).map(m=>MARKS[m][0]).join("")+' <span class="num">'+bdef(c).cost+'/'+bdef(c).vp+'</span></button>').join("")
+    :'<span class="tag">なし</span>';
+  $("myHand").querySelectorAll("button[data-c]").forEach(b=>{
+    b.onclick=()=>showCard(p.hand[+b.dataset.c]);});
+
+  const myTurn=!busy&&p.workersLeft>0&&G.players[G.cur]&&G.cur===0;
+  const acts=myTurn?actionsFor(G,p):[];
+  const keyset=new Set(acts.map(a=>a.key));
+  let h="";
+  const others=G.players.filter(x=>x.idx!==0)
+    .map(x=>'<div>'+(x.idx===G.startPlayer?"▶ ":"")+x.name
+      +' 👷'+x.workers+' 💰'+x.money+' 🏢'+x.built.filter(y=>!y.sold).length
+      +(x.debt?' ⚠️'+x.debt:'')+'</div>').join("");
+  h+='<div class="card"><div class="sec-t">ほかのプレイヤー</div><div class="tag">'+others+'</div></div>';
+  h+='<div class="sec-t">'+(myTurn?"労働者を置く（残り"+p.workersLeft+"人）":"待機中…")
+    +(G.startPlayer===0?"　▶先手はあなた":"")+'</div>';
+
+  // 1枚のカードを描く
+  const cardHTML=(key,cls,emoji,name,tags,body,capTxt,status)=>{
+    const on=keyset.has(key);
+    return '<button class="slot '+cls+(on?' ok':'')+'" '+(on?'':'disabled')+' data-k="'+key+'">'
+      +'<div class="hd"><span class="em">'+emoji+'</span><span class="nm">'+name+'</span>'
+      +tags+'</div>'
+      +'<div class="bd">'+body+'</div>'
+      +'<div class="ft"><span class="cap">'+capTxt+'</span>'+status+'</div></button>';
+  };
+  const statusFor=(key,w,extraWhy)=>{
+    const used=G.occupied[key]||0, cap=w.cap===undefined?1:w.cap;
+    const who=(G.occBy[key]||[]);
+    if(used>=cap&&cap<99) return '<span class="who">🚫 '+who.join("・")+' が使用中</span>';
+    if(keyset.has(key)) return '<span style="color:var(--pos)">✅ 置けます</span>';
+    if(!myTurn) return '<span class="cap">…</span>';
+    return '<span class="why">⛔ '+(extraWhy||"条件を満たしていません")+'</span>';
+  };
+
+  h+='<div class="sec-t">公共の職場</div>';
+  for(const w of G.pub){
+    if(w.cap<=0)continue;
+    const [em,role]=(ROLE[w.key]||["🏢","職場"]);
+    const used=G.occupied[w.key]||0;
+    const capTxt=w.cap>=99?"何人でも置けます":("枠 "+used+" / "+w.cap);
+    let why=null;
+    if(myTurn&&!keyset.has(w.key)&&used<w.cap){
+      if(w.ok&&!w.ok(G,p))why=w.why?w.why(G,p):"条件を満たしていません";
+      else if(w.build&&!buildable(G,p,{}).length)why=w.why?w.why(G,p):"建てられる建物がありません";
+    }
+    h+=cardHTML(w.key,"pub",em,w.name,'<span class="ind">'+role+'</span>',w.desc||"",capTxt,statusFor(w.key,w,why));
+  }
+
+  const mine=p.built.map((x,i)=>({x,i})).filter(o=>!o.x.sold&&!bdef(o.x.id).passive);
+  if(mine.length){h+='<div class="sec-t">自分の建物（自分だけが使えます）</div>';
+    for(const o of mine){const k="priv:0:"+o.i,b=bdef(o.x.id),em=BEMOJI[b.id]||"🏢";
+      let why=null;
+      if(myTurn&&!keyset.has(k)&&!(G.occupied[k])){
+        if(b.eff==="build_m1")why="コスト−1でも建てられる建物がありません";
+        else if(b.eff==="build_farm_free")why="手札に農園マークの建物がありません";
+      }
+      h+=cardHTML(k,"mine",em,b.name,markTags(b.id),b.txt+"　（勝利点 "+b.vp+"）","枠 "+(G.occupied[k]||0)+" / 1",
+        statusFor(k,{cap:1},why));}}
+
+  const passive=p.built.filter(x=>!x.sold&&bdef(x.id).passive);
+  if(passive.length)h+='<div class="tag" style="margin:4px 0 10px">🏠 保有（職場としては使いません）：'
+    +passive.map(x=>(BEMOJI[x.id]||"🏢")+bdef(x.id).name+"（"+bdef(x.id).vp+"点）").join("・")+'</div>';
+
+  if(G.publicSold.length){
+    const items=G.publicSold.map((x,i)=>({x,i})).filter(o=>!bdef(o.x.id).passive);
+    if(items.length){h+='<div class="sec-t">売却された建物（全員が使えます）</div>';
+      for(const o of items){const k="sold:"+o.i,b=bdef(o.x.id),em=BEMOJI[b.id]||"🏢";
+        let why=null;
+        if(myTurn&&!keyset.has(k)&&!(G.occupied[k])){
+          if(b.eff==="build_m1")why="コスト−1でも建てられる建物がありません";
+          else if(b.eff==="build_farm_free")why="手札に農園マークの建物がありません";
+        }
+        h+=cardHTML(k,"shared",em,b.name,markTags(b.id),b.txt,"枠 "+(G.occupied[k]||0)+" / 1",
+          statusFor(k,{cap:1},why));}}}
+
+  $("board").innerHTML=h;
+  $("board").querySelectorAll("button[data-k]").forEach(btn=>{
+    btn.onclick=()=>{const a=acts.find(a=>a.key===btn.dataset.k);if(a)humanAct(a);};});
+  $("log").innerHTML=G.log.map((e,i)=>{
+    const cls=(e.k==="round"?"round":e.k==="wage"?"wage":"")+(i===0?" newest":"");
+    const bd=(i===0?'<span class="badge">最新</span>':"")+(e.k==="round"?'<span class="badge rd">開始</span>':"");
+    return '<li class="'+cls.trim()+'">'+bd+e.t+'</li>';}).join("");
+}
+
+/* ============ 起動 ============ */
+function seg(el,opts,cur,cb){
+  el.innerHTML="";
+  opts.forEach(o=>{const b=document.createElement("button");b.textContent=o.t;
+    if(o.v===cur)b.className="on";b.onclick=()=>{cb(o.v);};el.appendChild(b);});
+}
+function drawSetup(){
+  seg($("segN"),[{t:"2人",v:2},{t:"3人",v:3},{t:"4人",v:4}],NP,v=>{NP=v;drawSetup();});
+  seg($("segL"),[{t:"やさしい",v:"easy"},{t:"ふつう",v:"normal"},{t:"つよい",v:"hard"}],LV,v=>{LV=v;drawSetup();});
+  seg($("segS"),[{t:"ゆっくり",v:1800},{t:"ふつう",v:1100},{t:"はやい",v:500}],SPD,v=>{SPD=v;drawSetup();});
+}
+$("btnStart").onclick=()=>{
+  G=newGame(NP);$("setup").classList.add("hide");$("game").classList.remove("hide");
+  $("result").classList.add("hide");startRound();};
+$("btnLog").onclick=()=>{const el=$("log");const tall=el.classList.toggle("tall");
+  $("btnLog").textContent=tall?"折りたたむ":"すべて表示";};
+$("btnHist").onclick=()=>showHistory();
+$("btnAgain").onclick=()=>{$("result").classList.add("hide");$("setup").classList.remove("hide");};
+drawSetup();
+<\/script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"><\/script>
+<script>
+"use strict";
+/* ================= 履歴 ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDML257ZXglBfRZ6zKkS2l4rIZBpeyNuTo",
+  authDomain: "bodogeshu.firebaseapp.com",
+  databaseURL: "https://bodogeshu-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bodogeshu",
+};
+const HKEY="keizai-history";
+const FPATH="keizai/history";
+let fdb=null;
+try{ if(typeof firebase!=="undefined" && firebaseConfig.databaseURL){
+  firebase.initializeApp(firebaseConfig); fdb=firebase.database(); } }catch(e){}
+const STORE=(()=>{ try{
+  if(window.storage) return window.storage;
+  if(window.parent && window.parent!==window && window.parent.storage) return window.parent.storage;
+}catch(e){} return null; })();
+const storageMode=()=> fdb ? "Firebase（全端末で共有）" : (STORE ? "アプリ内ストレージ" : "この端末のみ");
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function loadHistory(){
+  try{
+    if(fdb){ const s=await fdb.ref(FPATH).limitToLast(200).once("value"); const v=s.val();
+      if(v==null) return [];
+      const arr=Array.isArray(v)?v.filter(x=>x):Object.keys(v).sort().map(k=>v[k]);
+      return arr.filter(x=>x&&typeof x==="object"); }
+    if(STORE){ const r=await STORE.get(HKEY,false); return r?JSON.parse(r.value):[]; }
+    return JSON.parse(localStorage.getItem(HKEY)||"[]");
+  }catch(e){ return null; }
+}
+async function saveRecord(rec){
+  try{
+    if(fdb){ await fdb.ref(FPATH).push(rec); return; }
+    const h=await loadHistory(); if(h===null) return;
+    h.push(rec); if(h.length>100) h.splice(0,h.length-100);
+    if(STORE){ await STORE.set(HKEY, JSON.stringify(h), false); return; }
+    localStorage.setItem(HKEY, JSON.stringify(h));
+  }catch(e){}
+}
+async function showHistory(){
+  const el=document.getElementById("histbody");
+  el.innerHTML='<div class="tag">読み込み中…</div>';
+  const h=await loadHistory();
+  if(h===null){ el.innerHTML='<div class="tag">履歴を読み込めませんでした。</div>'; return; }
+  const rows=h.slice(-20).reverse();
+  el.innerHTML='<div class="tag" style="margin-bottom:8px">保存先：'+esc(storageMode())+'</div>'
+    +(rows.length?rows.map(r=>{
+      const d=new Date(r.ts||0); const dt=isNaN(d)?"":(d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+      const win=(r.win==="あなた");
+      return '<div class="rank'+(win?" you":"")+'"><span>'+esc(dt)+'　'+esc(r.np)+'人・'+esc(r.lv)+'</span>'
+        +'<span class="num">'+(win?"勝ち":"1位 "+esc(r.win))+'／自分 '+esc(r.you)+'点</span></div>';
+    }).join(""):'<div class="tag">まだ記録がありません。</div>');
+}
+<\/script>
 
 <script>
 /* 親（ランチャー）からテーマ指定を受け取る。単体で開いたときはOSの設定に従う */
